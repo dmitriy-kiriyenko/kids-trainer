@@ -1,4 +1,4 @@
-// A game of ten two-choice questions with personal records, a result screen and confetti.
+// A game of ten multiple-choice questions with personal records, a result screen and confetti.
 // The page provides #home with a .hero holding #startBtn, then calls quiz() with what differs per game.
 // Classic script on purpose: ES modules don't load from file://.
 const QUESTIONS = 10;
@@ -46,9 +46,9 @@ if (!PLAYER) location.replace('../index.html');
  * id: localStorage prefix for records and stats.
  * label, keys: text above the question and the keyboard hint (HTML).
  * deal(): QUESTIONS fresh items. question(item): nodes of the question card.
- * options(item): two answer buttons in display order, [{ label, cls, ok }].
+ * options(item): answer buttons in display order, [{ label, cls, ok }]; keys 1–9 pick them.
  * reveal(item, ok): optional, updates the question once answered.
- * hint(item), mistake(item): nodes explaining the answer, in the hint and in the mistakes list.
+ * hint(item, picked option), mistake(item): nodes explaining the answer, in the hint and in the mistakes list.
  */
 function quiz(def) {
   const RECORDS_KEY = `${def.id}-records-v2`;
@@ -276,7 +276,7 @@ function quiz(def) {
     def.reveal?.(item, ok);
 
     const hint = el('div', `hint ${ok ? 'ok' : 'bad'}`);
-    hint.append(el('span', 'verdict', ok ? '✅ Верно!' : '❌ Ошибка!'), ...def.hint(item));
+    hint.append(el('span', 'verdict', ok ? '✅ Верно!' : '❌ Ошибка!'), ...def.hint(item, game.options[i]));
     $('feedback').replaceChildren(hint);
 
     const stars = $('stars');
@@ -395,8 +395,9 @@ function quiz(def) {
 
   document.addEventListener('keydown', e => {
     if ($('dlg').open || !game || !$('game').classList.contains('active')) return;
-    if (e.key === '1' || e.key === 'ArrowLeft') answer(0);
-    else if (e.key === '2' || e.key === 'ArrowRight') answer(1);
+    if (e.key >= '1' && e.key <= String(game.options.length)) answer(+e.key - 1);
+    else if (e.key === 'ArrowLeft') answer(0);
+    else if (e.key === 'ArrowRight') answer(1);
     else if ((e.key === 'Enter' || e.key === ' ') && game.answered) { e.preventDefault(); nextQuestion(); }
     else if (e.key === 'Escape') exitGame();
   });

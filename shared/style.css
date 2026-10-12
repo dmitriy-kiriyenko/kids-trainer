@@ -206,7 +206,7 @@ h2 { margin: 0 0 16px; font-size: 1.35rem; font-weight: 800; }
 .hint .check { font-weight: 600; }
 .hint .check em { font-style: normal; color: var(--yellow); font-weight: 900; }
 .hint .why { display: block; color: var(--muted); font-size: .98rem; margin-top: 4px; }
-.keys { color: var(--muted); font-size: .9rem; text-align: center; }
+.keys { color: var(--muted); font-size: .9rem; text-align: center; margin-top: 12px; }
 
 .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .ans {

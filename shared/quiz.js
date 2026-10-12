@@ -48,7 +48,7 @@ if (!PLAYER) location.replace('../index.html');
  * deal(): QUESTIONS fresh items. question(item): nodes of the question card.
  * options(item): answer buttons in display order, [{ label, cls, ok }]; keys 1–9 pick them.
  * reveal(item, ok): optional, updates the question once answered.
- * hint(item, picked option), mistake(item): nodes explaining the answer, in the hint and in the mistakes list.
+ * hint(item, picked option), mistake(item, picked option): nodes explaining the answer, in the hint and in the mistakes list.
  */
 function quiz(def) {
   const RECORDS_KEY = `${def.id}-records-v2`;
@@ -82,15 +82,14 @@ function quiz(def) {
         <div id="question"></div>
       </div>
 
-      <div class="feedback" id="feedback" aria-live="polite">
-        <div class="keys">${def.keys}</div>
-      </div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
 
       <div class="answers" id="answers"></div>
 
       <div class="next-area">
         <button class="btn pink big next" id="nextBtn"><span id="nextLabel">Дальше →</span></button>
       </div>
+      <div class="keys">${def.keys}</div>
     </section>
 
     <section id="result" class="screen">
@@ -218,7 +217,6 @@ function quiz(def) {
 
   // ---------- Game ----------
   let game = null;
-  const keysHint = $('feedback').firstElementChild;
 
   function stopTimer() {
     if (game) clearTimeout(game.timer);
@@ -254,7 +252,7 @@ function quiz(def) {
       btn.onclick = () => answer(i);
       return btn;
     }));
-    $('feedback').replaceChildren(keysHint);
+    $('feedback').replaceChildren();
     $('nextBtn').classList.remove('visible', 'auto');
   }
 
@@ -266,7 +264,7 @@ function quiz(def) {
     const ok = game.options[i].ok;
     const buttons = [...$('answers').children];
 
-    if (ok) game.score += POINTS; else game.mistakes.push(item);
+    if (ok) game.score += POINTS; else game.mistakes.push([item, game.options[i]]);
 
     buttons.forEach((btn, j) => {
       btn.disabled = true;
@@ -341,9 +339,9 @@ function quiz(def) {
       : `До рекорда не хватило ${prevBest - score} баллов.`;
 
     $('mistakesCard').hidden = !mistakes.length;
-    $('mistakesList').replaceChildren(...mistakes.map(item => {
+    $('mistakesList').replaceChildren(...mistakes.map(([item, picked]) => {
       const li = el('li');
-      li.append(...def.mistake(item));
+      li.append(...def.mistake(item, picked));
       return li;
     }));
 

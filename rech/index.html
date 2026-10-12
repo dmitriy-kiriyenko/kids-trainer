@@ -32,7 +32,11 @@
   mark { background: none; color: inherit; }
   .ans:disabled mark { font-weight: 900; text-decoration: underline 3px; }
   .ans:disabled:not(.right) mark { text-decoration: line-through 3px; }
-  .mistakes mark { color: var(--lime); font-weight: 800; }
+  .mistakes .was, .mistakes .now { display: block; }
+  .mistakes .was { color: var(--muted); text-decoration: line-through; }
+  .mistakes mark { font-weight: 800; }
+  .mistakes .was mark { color: var(--red); }
+  .mistakes .now mark { color: var(--lime); }
 </style>
 </head>
 <body>
@@ -131,7 +135,12 @@ quiz({
     { label: marked(item.wrong, item.right), ok: false },
   ]),
   hint: item => [el('span', 'check', KINDS[item.kind]), el('span', 'why', item.why)],
-  mistake: item => [...marked(item.right, item.wrong), el('span', 'sub', `${KINDS[item.kind]}. ${item.why}`)],
+  mistake(item) {
+    const was = el('span', 'was'), now = el('span', 'now');
+    was.append(...marked(item.wrong, item.right));
+    now.append(...marked(item.right, item.wrong));
+    return [was, now, el('span', 'sub', `${KINDS[item.kind]}. ${item.why}`)];
+  },
 });
 </script>
 </body>

@@ -181,7 +181,7 @@ const ANALOGIES = [
 const TRAPS = {
   regular: v => [[v.base, regular(v.base), `${v.base} — неправильный глагол, -ed не добавляем.`]],
   fake: v => ANALOGIES.map(f => f(v)).filter(past => past !== v.base).map(past => [v.base, past, `Похоже на правду, но прошедшее от ${v.base} — ${v.past}.`]),
-  spy: v => neighbours(v).map(n => [n.base, n.past, `${n.base} — ${n.past} — это «${n.ru}».`]),
+  spy: v => neighbours(v).map(n => [n.base, n.past, `Это «${n.ru}».`]),
   mixed: v => neighbours(v).map(n => [v.base, n.past.split('/')[0], `${n.past.split('/')[0]} — это прошедшее от ${n.base} («${n.ru}»).`]),
   swapped: v => neighbours(v).map(n => [n.base, v.past.split('/')[0], `${n.base} — это «${n.ru}», а не «${v.ru}».`]),
 };
@@ -203,7 +203,7 @@ function traps(verb) {
     }
   }
   for (const n of shuffle(VERBS.slice())) {
-    if (picked.length < 3 && !seen.has(pair(n))) picked.push([n.base, n.past, `${pair(n)} — это «${n.ru}».`]);
+    if (picked.length < 3 && !seen.has(pair(n))) picked.push([n.base, n.past, `Это «${n.ru}».`]);
   }
   return picked;
 }
@@ -223,9 +223,10 @@ quiz({
     el('span', 'check', `${verb.ru} → ${pair(verb)}`),
     ...picked.ok ? [] : [el('span', 'why', picked.why)],
   ],
-  mistake(verb) {
-    const strong = el('b', null, pair(verb));
-    return [`${verb.emoji} ${verb.ru} — `, strong];
+  mistake(verb, picked) {
+    const sub = el('span', 'sub');
+    sub.append(el('s', null, picked.pair), ` — ${picked.why}`);
+    return [`${verb.emoji} ${verb.ru} — `, el('b', null, pair(verb)), sub];
   },
 });
 </script>

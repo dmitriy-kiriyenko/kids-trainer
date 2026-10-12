@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Irregular Verbs</title>
+<meta name="theme-color" content="#0b0820">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .logo { font-size: clamp(2.4rem, 12vw, 4.2rem); }
+  .rule-item .icon { font-size: 1.8rem; }
+  .rule-item s { color: var(--red); }
+
+  .question { min-height: 0; padding: 14px 20px 18px; }
+  .q-label { margin-bottom: 6px; }
+  .emoji { font-size: clamp(2.4rem, 11vw, 3.4rem); line-height: 1.1; }
+  .ru { font-size: clamp(1.6rem, 7vw, 2.4rem); font-weight: 800; margin: 2px 0 0; }
+
+  .answers { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+  .ans {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+    font-weight: 800;
+    letter-spacing: 0;
+    padding: 12px 16px;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .ans:hover:not(:disabled) { border-color: var(--cyan); background: rgba(34, 227, 255, .08); }
+  .ans .n { color: var(--muted); font-weight: 600; margin-right: 8px; }
+  .mistakes b { color: var(--lime); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="home" class="screen active">
+    <div class="hero">
+      <a class="back" href="../index.html">← Все игры</a>
+      <p class="greeting">Привет, <span data-player></span>! 👋</p>
+      <h1 class="logo"><span class="a">Irregular</span> <span class="b">Verbs</span></h1>
+      <p class="tagline">Неправильные глаголы</p>
+      <button class="btn big" id="startBtn">▶ Начать игру</button>
+    </div>
+
+    <div class="card">
+      <h2>🕵️ Найди шпиона</h2>
+      <div class="rule">
+        <div class="rule-item"><span class="icon">🚫</span><span><b>Без -ed.</b> Неправильный глагол не получает -ed: buy — <s>buyed</s> bought.</span></div>
+        <div class="rule-item"><span class="icon">👯</span><span><b>Двойники.</b> buy — bought и bring — brought похожи, а значат разное.</span></div>
+        <div class="rule-item"><span class="icon">🔀</span><span><b>Перепутанные пары.</b> buy — <s>brought</s>: прошедшее взяли у другого глагола.</span></div>
+        <div class="rule-item"><span class="icon">🎭</span><span><b>Самозванцы.</b> think — <s>thank</s>: похоже на правду, но такого прошедшего нет.</span></div>
+      </div>
+      <p class="rule-note">10 глаголов, четыре ответа, верный — один. За каждый — 10 баллов.</p>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/quiz.js"></script>
+<script>
+// [russian, emoji, present, past]; "/" separates equally correct past forms.
+const VERBS = [
+  ['быть', '✨', 'be', 'was/were'],
+  ['становиться', '🦋', 'become', 'became'],
+  ['начинать', '🏁', 'begin', 'began'],
+  ['дуть', '🌬️', 'blow', 'blew'],
+  ['ломать', '💥', 'break', 'broke'],
+  ['приносить', '🎁', 'bring', 'brought'],
+  ['строить', '🏗️', 'build', 'built'],
+  ['гореть', '🔥', 'burn', 'burnt/burned'],
+  ['покупать', '🛒', 'buy', 'bought'],
+  ['мочь, уметь', '💪', 'can', 'could'],
+  ['ловить', '🎣', 'catch', 'caught'],
+  ['выбирать', '🤔', 'choose', 'chose'],
+  ['приходить', '🏠', 'come', 'came'],
+  ['резать', '✂️', 'cut', 'cut'],
+  ['делать', '📝', 'do', 'did'],
+  ['рисовать', '🎨', 'draw', 'drew'],
+  ['пить', '🥤', 'drink', 'drank'],
+  ['водить машину', '🚗', 'drive', 'drove'],
+  ['есть, кушать', '🍕', 'eat', 'ate'],
+  ['падать', '🍂', 'fall', 'fell'],
+  ['кормить', '🐥', 'feed', 'fed'],
+  ['драться', '🥊', 'fight', 'fought'],
+  ['находить', '🔍', 'find', 'found'],
+  ['летать', '✈️', 'fly', 'flew'],
+  ['забывать', '🤷', 'forget', 'forgot'],
+  ['получать', '📬', 'get', 'got'],
+  ['давать', '🤲', 'give', 'gave'],
+  ['идти', '🚶', 'go', 'went'],
+  ['расти', '🌱', 'grow', 'grew'],
+  ['иметь', '🎒', 'have', 'had'],
+  ['слышать', '👂', 'hear', 'heard'],
+  ['вешать', '🖼️', 'hang', 'hung'],
+  ['прятать', '🙈', 'hide', 'hid'],
+  ['делать больно', '🤕', 'hurt', 'hurt'],
+  ['хранить', '📦', 'keep', 'kept'],
+  ['знать', '🧠', 'know', 'knew'],
+  ['учить', '📚', 'learn', 'learnt/learned'],
+  ['уходить, оставлять', '🚪', 'leave', 'left'],
+  ['терять', '🧦', 'lose', 'lost'],
+  ['мастерить, готовить', '🔨', 'make', 'made'],
+  ['встречать', '🤝', 'meet', 'met'],
+  ['платить', '💰', 'pay', 'paid'],
+  ['класть', '📥', 'put', 'put'],
+  ['читать', '📖', 'read', 'read'],
+  ['ездить верхом', '🐎', 'ride', 'rode'],
+  ['бегать', '🏃', 'run', 'ran'],
+  ['сказать', '💬', 'say', 'said'],
+  ['видеть', '👀', 'see', 'saw'],
+  ['отправлять', '✉️', 'send', 'sent'],
+  ['петь', '🎤', 'sing', 'sang'],
+  ['сидеть', '🪑', 'sit', 'sat'],
+  ['спать', '😴', 'sleep', 'slept'],
+  ['говорить', '🗣️', 'speak', 'spoke'],
+  ['тратить', '💸', 'spend', 'spent'],
+  ['стоять', '🧍', 'stand', 'stood'],
+  ['красть', '🦝', 'steal', 'stole'],
+  ['плавать', '🏊', 'swim', 'swam'],
+  ['брать', '✋', 'take', 'took'],
+  ['обучать', '👩‍🏫', 'teach', 'taught'],
+  ['рассказывать', '📢', 'tell', 'told'],
+  ['думать', '💭', 'think', 'thought'],
+  ['бросать', '⚾', 'throw', 'threw'],
+  ['понимать', '💡', 'understand', 'understood'],
+  ['просыпаться', '⏰', 'wake up', 'woke up'],
+  ['носить одежду', '👕', 'wear', 'wore'],
+  ['побеждать', '🏆', 'win', 'won'],
+].map(([ru, emoji, base, past]) => ({ ru, emoji, base, past }));
+
+// Look-alikes outside the list: they only ever appear as spies.
+const LOOKALIKES = [
+  ['благодарить', 'thank', 'thanked'],
+  ['чувствовать', 'feel', 'felt'],
+  ['наполнять', 'fill', 'filled'],
+  ['писать', 'write', 'wrote'],
+  ['продавать', 'sell', 'sold'],
+  ['кусать', 'bite', 'bit'],
+  ['звонить', 'ring', 'rang'],
+  ['тонуть', 'sink', 'sank'],
+  ['доставать', 'reach', 'reached'],
+  ['играть', 'play', 'played'],
+  ['пытаться', 'try', 'tried'],
+  ['нуждаться', 'need', 'needed'],
+].map(([ru, base, past]) => ({ ru, base, past }));
+
+const ALL = [...VERBS, ...LOOKALIKES];
+const pair = v => `${v.base} — ${v.past}`;
+
+function distance(a, b) {
+  let row = [...Array(b.length + 1).keys()];
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    row = next;
+  }
+  return row[b.length];
+}
+
+// Short words are all one or two letters apart, so they need a stricter bar.
+const alike = (a, b) => distance(a, b) <= (Math.min(a.length, b.length) <= 3 ? 1 : 2);
+const neighbours = verb => ALL.filter(v => v !== verb && (alike(v.base, verb.base) || alike(v.past, verb.past)));
+
+const regular = base => base.replace(/^\S+/, w =>
+  w.endsWith('e') ? w + 'd'
+  : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + 'ied'
+  : /^[^aeiou]*[aeiou][^aeiouwy]$/.test(w) ? w + w.at(-1) + 'ed'
+  : w + 'ed');
+
+// Past forms made up by the patterns of real ones: sing — sang, feed — fed, ride — rode, buy — bought.
+const ANALOGIES = [
+  v => v.base.replace(/i(?=[^aeiou]+$)/, 'a'),
+  v => v.base.replace(/ee(?=[^aeiou]$)/, 'e'),
+  v => v.base.replace(/i(?=[^aeiou]e$)/, 'o'),
+  v => v.past.replace(/ought$/, 'aught'),
+  v => v.past.replace(/aught$/, 'ought'),
+];
+
+// Each trap kind gives its candidates as [present, past, why it is wrong].
+const TRAPS = {
+  regular: v => [[v.base, regular(v.base), `${v.base} — неправильный глагол, -ed не добавляем.`]],
+  fake: v => ANALOGIES.map(f => f(v)).filter(past => past !== v.base).map(past => [v.base, past, `Похоже на правду, но прошедшее от ${v.base} — ${v.past}.`]),
+  spy: v => neighbours(v).map(n => [n.base, n.past, `${n.base} — ${n.past} — это «${n.ru}».`]),
+  mixed: v => neighbours(v).map(n => [v.base, n.past.split('/')[0], `${n.past.split('/')[0]} — это прошедшее от ${n.base} («${n.ru}»).`]),
+  swapped: v => neighbours(v).map(n => [n.base, v.past.split('/')[0], `${n.base} — это «${n.ru}», а не «${v.ru}».`]),
+};
+
+// Three wrong pairs, each of a different trap kind while there are enough kinds.
+function traps(verb) {
+  const valid = (base, past) => base === verb.base && verb.past.split('/').includes(past);
+  const seen = new Set([pair(verb)]);
+  const byKind = Object.values(TRAPS).map(kind => shuffle(kind(verb).filter(([base, past]) => {
+    const pair = `${base} — ${past}`;
+    if (valid(base, past) || seen.has(pair)) return false;
+    seen.add(pair);
+    return true;
+  })));
+  const picked = [];
+  while (picked.length < 3 && byKind.some(c => c.length)) {
+    for (const candidates of shuffle(byKind.filter(c => c.length))) {
+      if (picked.length < 3) picked.push(candidates.pop());
+    }
+  }
+  for (const n of shuffle(VERBS.slice())) {
+    if (picked.length < 3 && !seen.has(pair(n))) picked.push([n.base, n.past, `${pair(n)} — это «${n.ru}».`]);
+  }
+  return picked;
+}
+
+
+quiz({
+  id: 'verbs',
+  label: 'Как по-английски?',
+  keys: 'Клавиши: <b>1</b>–<b>4</b>',
+  deal: () => shuffle(VERBS.slice()).slice(0, QUESTIONS),
+  question: verb => [el('div', 'emoji', verb.emoji), el('p', 'ru', verb.ru)],
+  options: verb => shuffle([
+    { pair: pair(verb), ok: true },
+    ...traps(verb).map(([base, past, why]) => ({ pair: `${base} — ${past}`, why })),
+  ]).map((option, i) => ({ ...option, label: [el('span', 'n', i + 1), option.pair] })),
+  hint: (verb, picked) => [
+    el('span', 'check', `${verb.ru} → ${pair(verb)}`),
+    ...picked.ok ? [] : [el('span', 'why', picked.why)],
+  ],
+  mistake(verb) {
+    const strong = el('b', null, pair(verb));
+    return [`${verb.emoji} ${verb.ru} — `, strong];
+  },
+});
+</script>
+</body>
+</html>

@@ -58,6 +58,24 @@
   .card .b { color: var(--pink); }
   .card span { color: var(--muted); }
 
+  /* Empty columns on both sides keep the title centred; the right one holds the best-result medal. */
+  a.card { display: grid; grid-template-columns: var(--medal) 1fr var(--medal); align-items: center; gap: 12px; padding: 18px 16px; --medal: clamp(52px, 14vw, 72px); }
+  a.card > div:first-child { grid-column: 2; }
+  .best { grid-column: 3; display: flex; flex-direction: column; align-items: center; }
+  .best:empty { display: none; }
+  .best b { margin-top: 2px; font-size: .95rem; font-weight: 900; color: var(--text); }
+  .medal { width: 100%; height: auto; display: block; overflow: visible; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .45)); }
+  .medal-laurel { filter: drop-shadow(0 0 8px rgba(255, 210, 63, .55)); }
+  .medal-diamond { filter: drop-shadow(0 0 10px rgba(34, 227, 255, .8)); animation: glow 2.4s ease-in-out infinite; }
+  .medal-diamond .medal-rays { transform-origin: 50px 76px; animation: spin 14s linear infinite; }
+  .medal-diamond .medal-sparkles path { transform-box: fill-box; transform-origin: center; animation: twinkle 1.6s ease-in-out infinite; }
+  .medal-diamond .medal-sparkles path:nth-child(2) { animation-delay: .5s; }
+  .medal-diamond .medal-sparkles path:nth-child(3) { animation-delay: 1s; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes twinkle { 0%, 100% { opacity: .2; transform: scale(.5); } 50% { opacity: 1; transform: scale(1.15); } }
+  @keyframes glow { 50% { filter: drop-shadow(0 0 16px rgba(255, 62, 165, .9)); } }
+  @media (prefers-reduced-motion: reduce) { .medal, .medal * { animation: none !important; } }
+
   input, button {
     font: inherit;
     font-size: 1.3rem;
@@ -87,21 +105,31 @@
 
   <div id="games" hidden>
     <h1>Привет, <span id="player"></span>! 👋</h1>
-    <a class="card" href="tsya/index.html">
-      <strong><span class="a">ТСЯ</span> / <span class="b">ТЬСЯ</span></strong>
-      <span>Когда в глаголе нужен мягкий знак</span>
+    <a class="card" href="tsya/index.html" data-game="tsya">
+      <div>
+        <strong><span class="a">ТСЯ</span> / <span class="b">ТЬСЯ</span></strong>
+        <span>Когда в глаголе нужен мягкий знак</span>
+      </div>
+      <div class="best"></div>
     </a>
-    <a class="card" href="rech/index.html">
-      <strong><span class="a">Скажи</span> <span class="b">правильно</span></strong>
-      <span>Найди речевую ошибку</span>
+    <a class="card" href="rech/index.html" data-game="rech">
+      <div>
+        <strong><span class="a">Скажи</span> <span class="b">правильно</span></strong>
+        <span>Найди речевую ошибку</span>
+      </div>
+      <div class="best"></div>
     </a>
-    <a class="card" href="verbs/index.html">
-      <strong><span class="a">Irregular</span> <span class="b">Verbs</span></strong>
-      <span>Неправильные глаголы</span>
+    <a class="card" href="verbs/index.html" data-game="verbs">
+      <div>
+        <strong><span class="a">Irregular</span> <span class="b">Verbs</span></strong>
+        <span>Неправильные глаголы</span>
+      </div>
+      <div class="best"></div>
     </a>
   </div>
 </div>
 
+<script src="shared/results.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const store = {
@@ -121,6 +149,20 @@ function render() {
   $('nameForm').hidden = !!player;
   $('games').hidden = !player;
   $('player').textContent = player;
+  document.querySelectorAll('[data-game]').forEach(renderBest);
+}
+
+// The medal for the best score in the game's records; nothing until the game has been played.
+function renderBest(card) {
+  let records = [];
+  try { records = JSON.parse(store.get(recordsKey(card.dataset.game))) || []; } catch {}
+  const scores = records.map(r => r?.score).filter(s => typeof s === 'number');
+  const slot = card.querySelector('.best');
+  if (!scores.length) return slot.replaceChildren();
+  const best = Math.max(...scores);
+  slot.innerHTML = medalSvg(best);
+  slot.append(Object.assign(document.createElement('b'), { textContent: best }));
+  slot.title = `Лучший результат: ${best}`;
 }
 
 $('nameForm').onsubmit = e => {

@@ -1,18 +1,11 @@
 // A game of ten multiple-choice questions with personal records, a result screen and confetti.
 // The page provides #home with a .hero holding #startBtn, then calls quiz() with what differs per game.
+// Needs shared/results.js loaded first.
 // Classic script on purpose: ES modules don't load from file://.
 const QUESTIONS = 10;
 const POINTS = 10;
 const TOP = 10;
 const AUTO_NEXT_MS = 1800;
-
-const RESULTS = [
-  [100, '🏆', 'идеально! Ни одной ошибки!'],
-  [80, '🚀', 'отлично! Почти без ошибок!'],
-  [60, '👍', 'хорошо! Ещё чуть-чуть — и будет отлично.'],
-  [40, '🙂', 'неплохо, но правило стоит повторить.'],
-  [0, '💪', 'не сдавайся! Повтори правило и попробуй ещё раз.'],
-];
 
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => {
@@ -51,7 +44,7 @@ if (!PLAYER) location.replace('../index.html');
  * hint(item, picked option), mistake(item, picked option): nodes explaining the answer, in the hint and in the mistakes list.
  */
 function quiz(def) {
-  const RECORDS_KEY = `${def.id}-records-v2`;
+  const RECORDS_KEY = recordsKey(def.id);
   const STATS_KEY = `${def.id}-stats-v2`;
 
   $('home').querySelector('.hero').insertAdjacentHTML('afterend', `
@@ -323,7 +316,7 @@ function quiz(def) {
     const at = Date.now();
     const rank = saveResult(score, at).findIndex(r => r.at === at);
 
-    const [, emoji, msg] = RESULTS.find(([min]) => score >= min);
+    const { emoji, msg } = resultFor(score);
     $('resEmoji').textContent = emoji;
     $('resMsg').textContent = `${PLAYER}, ${msg}`;
     countUp($('resScore'), score);

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Question Words</title>
+<meta name="theme-color" content="#0b0820">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .logo { font-size: clamp(2.4rem, 12vw, 4.2rem); }
+  .rule-item .icon { font-size: 1.8rem; }
+
+  .question { min-height: 0; padding: 18px 20px 22px; }
+  .q-label { margin-bottom: 6px; }
+  .word { font-size: clamp(2.2rem, 10vw, 3.4rem); font-weight: 900; margin: 0; }
+  .dir { color: var(--muted); margin: 4px 0 0; }
+
+  .answers { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ans {
+    font-size: clamp(1.05rem, 4.5vw, 1.4rem);
+    font-weight: 800;
+    letter-spacing: 0;
+    padding: 14px 6px;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .ans:hover:not(:disabled) { border-color: var(--cyan); background: rgba(34, 227, 255, .08); }
+  .ans .n { color: var(--muted); font-weight: 600; margin-right: 6px; }
+  .mistakes b { color: var(--lime); }
+  @media (max-width: 480px) { .ans .n { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="home" class="screen active">
+    <div class="hero">
+      <a class="back" href="../index.html">← Все игры</a>
+      <p class="greeting">Привет, <span data-player></span>! 👋</p>
+      <h1 class="logo"><span class="a">Question</span> <span class="b">Words</span></h1>
+      <p class="tagline">Вопросительные слова</p>
+      <button class="btn big" id="startBtn">▶ Начать игру</button>
+    </div>
+
+    <div class="card">
+      <h2>📒 Шпаргалка</h2>
+      <div class="rule" id="cheatSheet"></div>
+      <p class="rule-note">10 вопросов: пять с русского на английский и пять обратно. За каждый — 10 баллов.</p>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/results.js"></script>
+<script src="../shared/quiz.js"></script>
+<script>
+// [english, russian, emoji]; a list of russian words means each of them is a full translation.
+const WORDS = [
+  ['What', 'Что', '❓'],
+  ['Who', 'Кто', '🧑'],
+  ['Where', ['Где', 'Куда', 'Откуда'], '📍'],
+  ['When', 'Когда', '⏰'],
+  ['Why', ['Почему', 'Зачем'], '🤔'],
+  ['How', 'Как', '🛠️'],
+  ['Which', 'Который', '👉'],
+  ['Whose', 'Чей', '🎒'],
+  ['With whom', 'С кем', '👫'],
+].map(([en, ru, emoji]) => ({ en, ru: [ru].flat(), emoji }));
+
+const anyRu = word => word.ru[Math.floor(Math.random() * word.ru.length)];
+const allRu = word => word.ru.join(', ').toLowerCase();
+const lower = s => s.toLowerCase();
+
+// Half the questions go from russian, half from english. One shuffle splits nine words into 5 + 5,
+// so every word comes up and one of them twice, once each way — but never twice in a row.
+function deal() {
+  const words = shuffle(WORDS.slice());
+  const half = QUESTIONS / 2;
+  let items;
+  do {
+    items = shuffle([
+      ...words.slice(0, half).map(word => ({ word, from: 'ru', ru: anyRu(word) })),
+      ...words.slice(-half).map(word => ({ word, from: 'en', ru: anyRu(word) })),
+    ]);
+  } while (items.some((item, i) => i && item.word === items[i - 1].word));
+  return items;
+}
+
+const asked = item => item.from === 'ru' ? item.ru : item.word.en;
+const answer = item => item.from === 'ru' ? item.word.en : item.ru;
+
+// Every word is an option. A word with several russian translations shows as just one of them, e.g. Where as где, куда or откуда.
+function options(item) {
+  return shuffle(WORDS.map(word => {
+    const ok = word === item.word;
+    if (item.from === 'ru') return { text: word.en, ok, why: `${word.en} — это «${allRu(word)}».` };
+    const text = ok ? item.ru : anyRu(word);
+    return { text, ok, why: `«${text}» — это ${word.en}.` };
+  })).map((option, i) => ({ ...option, label: [el('span', 'n', i + 1), option.text] }));
+}
+
+const check = item => `${item.word.emoji} ${asked(item)} → ${answer(item)}`;
+const manyNote = item => item.word.ru.length > 1 ? `${item.word.en} — это и ${item.word.ru.map(lower).join(', и ')}.` : null;
+
+$('cheatSheet').replaceChildren(...WORDS.map(word => {
+  const row = el('div', 'rule-item');
+  const text = el('span');
+  text.append(el('b', null, word.en), ` — ${allRu(word)}`);
+  row.append(el('span', 'icon', word.emoji), text);
+  return row;
+}));
+
+quiz({
+  id: 'wh',
+  label: 'Переведи',
+  keys: 'Клавиши: <b>1</b>–<b>9</b>',
+  deal,
+  question: item => [el('p', 'word', asked(item)), el('p', 'dir', item.from === 'ru' ? 'на английский' : 'на русский')],
+  options,
+  hint: (item, picked) => [
+    el('span', 'check', check(item)),
+    ...[picked.ok ? manyNote(item) : picked.why].filter(Boolean).map(text => el('span', 'why', text)),
+  ],
+  mistake(item, picked) {
+    const sub = el('span', 'sub');
+    sub.append(el('s', null, picked.text), ` — ${picked.why}`);
+    return [`${item.word.emoji} ${asked(item)} — `, el('b', null, answer(item)), sub];
+  },
+});
+</script>
+</body>
+</html>

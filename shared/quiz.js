@@ -39,9 +39,12 @@ if (!PLAYER) location.replace('../index.html');
  * id: localStorage prefix for records and stats.
  * label, keys: text above the question and the keyboard hint (HTML).
  * deal(): QUESTIONS fresh items. question(item): nodes of the question card.
- * options(item): answer buttons in display order, [{ label, cls, ok }]; keys 1–9 pick them.
+ * The answers are either
+ *   options(item): answer buttons in display order, [{ label, cls, ok }]; keys 1–9 pick them, or
+ *   play(item, settle): nodes the game runs itself until it calls settle(ok, picked) once.
  * reveal(item, ok): optional, updates the question once answered.
- * hint(item, picked option), mistake(item, picked option): nodes explaining the answer, in the hint and in the mistakes list.
+ * hint(item, picked), mistake(item, picked): nodes explaining the answer, in the hint and in the mistakes list.
+ *   picked is the chosen option, or whatever play() passed to settle().
  */
 function quiz(def) {
   const RECORDS_KEY = recordsKey(def.id);
@@ -226,7 +229,7 @@ function quiz(def) {
   function renderQuestion() {
     const item = game.items[game.index];
     game.answered = false;
-    game.options = def.options(item);
+    game.options = def.options?.(item);
 
     $('counter').textContent = `${game.index + 1} / ${QUESTIONS}`;
     $('stars').textContent = `⭐ ${game.score}`;
@@ -239,35 +242,37 @@ function quiz(def) {
     card.offsetWidth;
     card.style.animation = 'fadeIn .3s ease';
 
-    $('answers').replaceChildren(...game.options.map((option, i) => {
+    $('answers').replaceChildren(...game.options ? game.options.map((option, i) => {
       const btn = el('button', `ans ${option.cls ?? ''}`);
       btn.append(...[option.label].flat());
       btn.onclick = () => answer(i);
       return btn;
-    }));
+    }) : def.play(item, settle));
     $('feedback').replaceChildren();
     $('nextBtn').classList.remove('visible', 'auto');
   }
 
   function answer(i) {
     if (!game || game.answered) return;
+    const ok = game.options[i].ok;
+    [...$('answers').children].forEach((btn, j) => {
+      btn.disabled = true;
+      if (game.options[j].ok) btn.classList.add('right');
+      if (j === i && !ok) btn.classList.add('wrong');
+    });
+    settle(ok, game.options[i]);
+  }
+
+  function settle(ok, picked) {
+    if (!game || game.answered) return;
     game.answered = true;
 
     const item = game.items[game.index];
-    const ok = game.options[i].ok;
-    const buttons = [...$('answers').children];
-
-    if (ok) game.score += POINTS; else game.mistakes.push([item, game.options[i]]);
-
-    buttons.forEach((btn, j) => {
-      btn.disabled = true;
-      if (game.options[j].ok) btn.classList.add('right');
-    });
-    if (!ok) buttons[i].classList.add('wrong');
+    if (ok) game.score += POINTS; else game.mistakes.push([item, picked]);
     def.reveal?.(item, ok);
 
     const hint = el('div', `hint ${ok ? 'ok' : 'bad'}`);
-    hint.append(el('span', 'verdict', ok ? '✅ Верно!' : '❌ Ошибка!'), ...def.hint(item, game.options[i]));
+    hint.append(el('span', 'verdict', ok ? '✅ Верно!' : '❌ Ошибка!'), ...def.hint(item, picked));
     $('feedback').replaceChildren(hint);
 
     const stars = $('stars');
@@ -386,9 +391,9 @@ function quiz(def) {
 
   document.addEventListener('keydown', e => {
     if ($('dlg').open || !game || !$('game').classList.contains('active')) return;
-    if (e.key >= '1' && e.key <= String(game.options.length)) answer(+e.key - 1);
-    else if (e.key === 'ArrowLeft') answer(0);
-    else if (e.key === 'ArrowRight') answer(1);
+    if (game.options && e.key >= '1' && e.key <= String(game.options.length)) answer(+e.key - 1);
+    else if (game.options && e.key === 'ArrowLeft') answer(0);
+    else if (game.options && e.key === 'ArrowRight') answer(1);
     else if ((e.key === 'Enter' || e.key === ' ') && game.answered) { e.preventDefault(); nextQuestion(); }
     else if (e.key === 'Escape') exitGame();
   });

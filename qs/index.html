@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Question Structure</title>
+<meta name="theme-color" content="#0b0820">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .logo { font-size: clamp(2.2rem, 11vw, 4rem); }
+  .rule-item { flex-wrap: wrap; gap: 4px 14px; }
+  .rule-item i { color: var(--muted); }
+
+  .question { min-height: 0; padding: 22px 18px; gap: 16px; }
+  .q-label { margin-bottom: 0; }
+  .sentence { margin: 0; font-size: clamp(1.3rem, 5.5vw, 1.8rem); font-weight: 600; line-height: 1.4; }
+  .mark { color: var(--yellow); font-weight: 900; text-decoration: underline 3px; text-underline-offset: 5px; }
+  .mistakes .mark { text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+  .built {
+    min-height: 62px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 10px;
+    padding: 10px 14px;
+    border-radius: 18px;
+    border: 2px dashed var(--border);
+    font-size: clamp(1.2rem, 5vw, 1.6rem);
+    font-weight: 800;
+    color: var(--cyan);
+  }
+  .built:empty::before { content: 'собирай вопрос здесь'; color: var(--muted); font-weight: 400; font-size: 1rem; }
+  .built span { animation: fadeIn .2s ease; }
+  .built.done { border-style: solid; border-color: var(--lime); color: var(--lime); background: rgba(93, 255, 143, .1); }
+  .built.failed { border-color: rgba(255, 77, 109, .6); }
+
+  .answers { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .tile {
+    font: inherit;
+    font-size: clamp(1.15rem, 5vw, 1.5rem);
+    font-weight: 800;
+    padding: 14px 18px;
+    border-radius: 16px;
+    border: 3px solid var(--border);
+    background: rgba(255, 255, 255, .04);
+    color: var(--text);
+    cursor: pointer;
+    transition: transform .12s, background .2s, opacity .2s, border-color .2s;
+    touch-action: manipulation;
+  }
+  .tile:hover:not(:disabled) { border-color: var(--cyan); background: rgba(34, 227, 255, .08); }
+  .tile:active:not(:disabled) { transform: scale(.95); }
+  .tile:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+  .tile:disabled { cursor: default; opacity: .3; }
+  .tile.used { opacity: .15; }
+  .tile.wrong { opacity: 1; background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 0 28px rgba(255, 77, 109, .7); }
+
+  .mistakes b { color: var(--lime); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="home" class="screen active">
+    <div class="hero">
+      <a class="back" href="../index.html">← Все игры</a>
+      <p class="greeting">Привет, <span data-player></span>! 👋</p>
+      <h1 class="logo"><span class="a">Question</span> <span class="b">Structure</span></h1>
+      <p class="tagline">Структура вопроса</p>
+      <button class="btn big" id="startBtn">▶ Начать игру</button>
+    </div>
+
+    <div class="card">
+      <h2>📒 Шпаргалка</h2>
+      <div class="rule">
+        <div class="rule-item"><span>К <b>подлежащему</b>: вопросительное слово встаёт на его место, <b>do / does / did</b> не нужны. В present глагол всегда с <b>-s</b>.</span>
+          <i>The kids play chess. → Who plays chess?</i></div>
+        <div class="rule-item"><span>К <b>остальным</b>: вопросительное слово + <b>do / does / did</b> + подлежащее + глагол без окончаний + всё остальное по порядку.</span>
+          <i>The boy ran to the disco. → Where did the boy run?</i></div>
+        <div class="rule-item"><span><b>does</b> — для he, she, it, одного; <b>do</b> — для многих; <b>did</b> — для прошедшего времени.</span></div>
+        <div class="rule-item"><span><b>who</b> кто? кого? · <b>what</b> что? · <b>where</b> где? куда? · <b>when</b> когда? · <b>how</b> как? · <b>why</b> почему? зачем?</span></div>
+      </div>
+      <p class="rule-note">10 предложений. Нажимай кусочки по порядку — собери вопрос к выделенной части. Лишние кусочки не трогай: один неверный клик — и вопрос не засчитан. За каждый собранный — 10 баллов.</p>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/results.js"></script>
+<script src="../shared/quiz.js"></script>
+<script>
+// Each sentence is [subject, verb, ...the rest], cut into the pieces the player gets.
+// 'text|word' is a part a question can be asked to with that question word; plain 'text' is not asked about.
+// The verb is 'as in the sentence/without endings', plus '/with -s' when a plural subject plays in the present:
+// the question to the subject takes it (The kids play → Who plays?).
+// Lowercase except names: the sentence and the question get their capital letter when shown.
+const PRESENT = [
+  ['Tom|who', 'plays/play', 'football|what', 'in the park|where', 'after school|when'],
+  ['my sister|who', 'reads/read', 'comics|what', 'in bed|where'],
+  ['the kids|who', 'play/play/plays', 'hide-and-seek|what', 'in the garden|where'],
+  ['Anna|who', 'talks/talk', 'to', 'her grandma|who', 'on the phone|how', 'on Sundays|when'],
+  ['the bus|what', 'stops/stop', 'near our school|where'],
+  ['Max|who', 'goes/go', 'to school|where', 'by bus|how'],
+  ['my dad|who', 'cooks/cook', 'pancakes|what', 'on Saturdays|when'],
+  ['the cat|what', 'sleeps/sleep', 'on the sofa|where', 'after lunch|when'],
+  ['we|who', 'have/have/has', 'lunch|what', 'at one o\'clock|when'],
+  ['Lily|who', 'draws/draw', 'animals|what', 'with coloured pencils|how'],
+  ['my friends|who', 'swim/swim/swims', 'in the river|where', 'in summer|when'],
+  ['the baby|who', 'cries/cry', 'at night|when'],
+  ['our teacher|who', 'drinks/drink', 'coffee|what', 'in the morning|when'],
+  ['Sam|who', 'walks/walk', 'the dog', 'before breakfast|when'],
+  ['the shop|what', 'opens/open', 'at nine o\'clock|when'],
+  ['Kate|who', 'wears/wear', 'a red hat|what', 'because it is cold|why'],
+  ['the boys|who', 'ride/ride/rides', 'their bikes', 'to the lake|where', 'after lunch|when'],
+  ['my brother|who', 'eats/eat', 'cereal|what', 'with a big spoon|how'],
+  ['the birds|what', 'sing/sing/sings', 'in the trees|where', 'in the morning|when'],
+  ['Ben|who', 'helps/help', 'his mum|who', 'in the kitchen|where'],
+];
+
+const PAST = [
+  ['the boy|who', 'ran/run', 'fast|how', 'to the disco|where'],
+  ['Mia|who', 'found/find', 'a little kitten|what', 'under the bench|where'],
+  ['we|who', 'visited/visit', 'our grandparents|who', 'last summer|when'],
+  ['the children|who', 'built/build', 'a snowman|what', 'in the yard|where', 'yesterday|when'],
+  ['Leo|who', 'broke/break', 'the window|what', 'with a ball|how'],
+  ['my mum|who', 'bought/buy', 'apples|what', 'at the market|where'],
+  ['the dog|what', 'barked/bark', 'loudly|how', 'at', 'the postman|who'],
+  ['Alice|who', 'wrote/write', 'a letter|what', 'to', 'her friend|who'],
+  ['the train|what', 'left/leave', 'at six o\'clock|when'],
+  ['Jack|who', 'stayed/stay', 'at home|where', 'because he was ill|why'],
+  ['the girls|who', 'sang/sing', 'a song|what', 'at the party|where'],
+  ['my dad|who', 'fixed/fix', 'my bike|what', 'on Sunday|when'],
+  ['the teacher|who', 'opened/open', 'the door|what', 'quietly|how'],
+  ['Nick|who', 'went/go', 'to the shop|where', 'to buy bread|why'],
+  ['we|who', 'watched/watch', 'a film|what', 'in the evening|when'],
+  ['the cat|what', 'caught/catch', 'a mouse|what', 'in the kitchen|where'],
+  ['Emma|who', 'danced/dance', 'with', 'her brother|who', 'at the wedding|where'],
+  ['the boys|who', 'played/play', 'chess|what', 'after dinner|when'],
+  ['my grandma|who', 'baked/bake', 'a cake|what', 'in the morning|when'],
+  ['Paul|who', 'came/come', 'home', 'late|when'],
+];
+
+const WORDS = { who: 'кто? кого?', what: 'что?', where: 'где? куда?', when: 'когда?', how: 'как?', why: 'почему? зачем?' };
+// Words that could both fit the same part (Who barked? What barked?) never come up together.
+const TWINS = { who: 'what', what: 'who' };
+
+function parse(tense, [subject, verb, ...rest]) {
+  const part = s => { const [text, word] = s.split('|'); return { text, word }; };
+  const [form, base, withS = form] = verb.split('/');
+  return {
+    subject: part(subject),
+    verb: { form, base, withS },
+    rest: rest.map(part),
+    aux: tense === 'past' ? 'did' : form === base ? 'do' : 'does',
+  };
+}
+
+const SENTENCES = { present: PRESENT.map(s => parse('present', s)), past: PAST.map(s => parse('past', s)) };
+
+const capital = s => s[0].toUpperCase() + s.slice(1);
+const pick = list => list[Math.floor(Math.random() * list.length)];
+
+// Questions to the subject in every game; the others go to a random one of the other parts.
+const TO_SUBJECT = 3;
+
+// Half present, half past; every sentence at most once. The mixed sentences hand out the subject
+// questions from the start of the list, then the questions are mixed again to spread them out.
+function deal() {
+  const half = QUESTIONS / 2;
+  return shuffle(shuffle([
+    ...shuffle(SENTENCES.present.slice()).slice(0, half),
+    ...shuffle(SENTENCES.past.slice()).slice(0, half),
+  ]).map((s, i) => {
+    const target = i < TO_SUBJECT ? s.subject : pick(s.rest.filter(p => p.word));
+    const toSubject = target === s.subject;
+    const verb = toSubject ? s.verb.withS : s.verb.base;
+    const sentence = [s.subject.text, s.verb.form, ...s.rest.map(p => p.text)];
+    // Both forms stand in the verb's place, so the right one has to be chosen: ran or run, reads or read, plays or play.
+    const verbs = shuffle([...new Set([s.verb.base, s.verb.withS])]);
+    const tiles = [s.subject.text, ...verbs, ...s.rest.map(p => p.text)];
+    const others = Object.keys(WORDS).filter(w => w !== target.word && w !== TWINS[target.word]);
+    const extras = shuffle([target.word, ...shuffle(others).slice(0, 2), s.aux]);
+    const rest = s.rest.filter(p => p !== target).map(p => p.text);
+    const answer = toSubject ? [target.word, verb, ...rest] : [target.word, s.aux, s.subject.text, verb, ...rest];
+    return { s, target, toSubject, verb, sentence, highlight: [s.subject, ...s.rest].indexOf(target), tiles: [...tiles, ...extras], answer };
+  }));
+}
+
+// The sentence with the asked-about part marked; parts are subject, verb, rest, the mark skips the verb.
+function sentenceNodes(item) {
+  const nodes = [];
+  item.sentence.forEach((text, i) => {
+    const shown = i ? text : capital(text);
+    const partIndex = i === 0 ? 0 : i === 1 ? -1 : i - 1;
+    if (i) nodes.push(' ');
+    nodes.push(partIndex === item.highlight ? el('span', 'mark', shown) : shown);
+  });
+  nodes.push('.');
+  return nodes;
+}
+
+const question = item => capital(item.answer.join(' ')) + '?';
+
+let built;
+
+function play(item, settle) {
+  let step = 0;
+  const buttons = item.tiles.map(text => {
+    const btn = el('button', 'tile', text);
+    btn.onclick = () => {
+      if (text !== item.answer[step]) {
+        btn.classList.add('wrong');
+        built.classList.add('failed');
+        return settle(false, { text, step });
+      }
+      btn.disabled = true;
+      btn.classList.add('used');
+      built.append(el('span', null, text));
+      if (++step === item.answer.length) {
+        built.replaceChildren(question(item));
+        built.classList.add('done');
+        settle(true);
+      }
+    };
+    return btn;
+  });
+  return buttons;
+}
+
+// Why the picked tile is not the next one.
+function why(item, picked) {
+  const target = item.target.text;
+  if (picked.text === target) return `«${target}» заменяет вопросительное слово — его в вопросе нет.`;
+  if (picked.text in WORDS && picked.text !== item.target.word)
+    return `«${target}» — это ответ на «${WORDS[item.target.word]}», значит ${item.target.word}.`;
+  if (item.toSubject && picked.text === item.s.aux)
+    return `В вопросе к подлежащему ${item.s.aux} не нужен: ${item.target.word} встаёт на место подлежащего.`;
+  if (picked.text !== item.verb && [item.s.verb.base, item.s.verb.withS].includes(picked.text))
+    return item.toSubject
+      ? `В вопросе к подлежащему нет ${item.s.aux}, поэтому глагол ${item.s.aux === 'did' ? 'в прошедшем времени' : 'с -s'}: ${item.verb}.`
+      : `Время показывает ${item.s.aux}, поэтому глагол без окончаний: ${item.verb}.`;
+  return item.toSubject
+    ? 'Порядок: вопросительное слово → глагол → всё остальное.'
+    : `Порядок: вопросительное слово → ${item.s.aux} → подлежащее → глагол → всё остальное.`;
+}
+
+quiz({
+  id: 'qs',
+  label: 'Задай вопрос к выделенному',
+  keys: 'Нажимай кусочки по порядку · <b>Enter</b> — дальше',
+  deal,
+  question(item) {
+    const sentence = el('p', 'sentence');
+    sentence.append(...sentenceNodes(item));
+    built = el('div', 'built');
+    return [sentence, built];
+  },
+  play,
+  reveal() {
+    [...$('answers').children].forEach(btn => btn.disabled = true);
+  },
+  hint: (item, picked) => [
+    el('span', 'check', question(item)),
+    ...(picked ? [el('span', 'why', why(item, picked))] : []),
+  ],
+  mistake(item, picked) {
+    const sub = el('span', 'sub');
+    sub.append('Нажато ', el('s', null, picked.text), ` — ${why(item, picked)}`);
+    return [...sentenceNodes(item), ' → ', el('b', null, question(item)), sub];
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+# GitHub Pages builds the site with Jekyll; keep dev tooling out of it.
+exclude: [bin]

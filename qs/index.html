@@ -61,6 +61,20 @@
   .tile.wrong { opacity: 1; background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 0 28px rgba(255, 77, 109, .7); }
 
   .mistakes b { color: var(--lime); }
+
+  /* The home page cheat sheet, repeated under the game in a denser form. */
+  .cheat { margin-top: 20px; padding: 16px; }
+  .cheat h2 { font-size: 1.1rem; margin-bottom: 10px; }
+  .cheat .rule { gap: 8px; }
+  .cheat .rule-item { padding: 10px 12px; font-size: .95rem; }
+  .cheat .rule-item b { font-size: 1.05rem; }
+  /* Wide screens: beside the game instead of below it, so it needs no scrolling. */
+  @media (min-width: 1100px) {
+    .wrap:has(#game.active) { max-width: 1100px; }
+    #game.active { display: grid; grid-template-columns: minmax(0, 1fr) 340px; column-gap: 24px; }
+    #game > * { grid-column: 1; }
+    #game > .cheat { grid-column: 2; grid-row: 1 / span 7; align-self: start; margin-top: 0; }
+  }
 </style>
 </head>
 <body>
@@ -74,7 +88,7 @@
       <button class="btn big" id="startBtn">▶ Начать игру</button>
     </div>
 
-    <div class="card">
+    <div class="card" id="cheat">
       <h2>📒 Шпаргалка</h2>
       <div class="rule">
         <div class="rule-item"><span>К <b>подлежащему</b>: вопросительное слово встаёт на его место, <b>do / does / did</b> не нужны. В present глагол всегда с <b>-s</b>.</span>
@@ -272,6 +286,13 @@ quiz({
     return [...sentenceNodes(item), ' → ', el('b', null, question(item)), sub];
   },
 });
+
+// The cheat sheet stays in sight during the game too: the point is to learn the rule, not to get caught out.
+const cheat = $('cheat').cloneNode(true);
+cheat.removeAttribute('id');
+cheat.classList.add('cheat');
+cheat.querySelector('.rule-note').remove();
+$('game').append(cheat);
 </script>
 </body>
 </html>

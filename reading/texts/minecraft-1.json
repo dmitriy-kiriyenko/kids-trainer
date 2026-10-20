@@ -1,0 +1,143 @@
+{
+  "title": "A House for the Night",
+  "topic": "minecraft",
+  "text": [
+    "Max is playing Minecraft with his friend Leo.",
+    "They have only one day to build a house.",
+    "Leo cuts trees, and Max finds stones.",
+    "When the sun goes down, the house isn't ready.",
+    "A big green creeper comes out of the dark forest.",
+    "Leo runs behind the house, but Max doesn't see the creeper.",
+    "Boom! Now they have a house with no walls."
+  ],
+  "glossary": {
+    "max": "Макс",
+    "is": "есть, является (is playing — играет сейчас)",
+    "playing": "играет (is playing — играет сейчас)",
+    "minecraft": "Майнкрафт",
+    "with": "с",
+    "his": "его, свой",
+    "friend": "друг",
+    "leo": "Лео",
+    "they": "они",
+    "have": "иметь (they have — у них есть)",
+    "only": "только",
+    "one": "один",
+    "day": "день",
+    "to": "чтобы (to build — чтобы построить)",
+    "build": "строить",
+    "a": "артикль: один, какой-то (не переводится)",
+    "house": "дом",
+    "cuts": "рубит, режет",
+    "trees": "деревья",
+    "and": "и, а",
+    "finds": "находит",
+    "stones": "камни",
+    "when": "когда",
+    "the": "артикль (не переводится)",
+    "sun": "солнце",
+    "goes": "идёт (goes down — садится, опускается)",
+    "down": "вниз (goes down — садится, опускается)",
+    "isn't": "не (is not)",
+    "ready": "готов",
+    "big": "большой",
+    "green": "зелёный",
+    "creeper": "крипер (зелёный монстр из Майнкрафта, взрывается)",
+    "comes": "приходит, выходит",
+    "out": "наружу (comes out of — выходит из)",
+    "of": "из (out of — из)",
+    "dark": "тёмный",
+    "forest": "лес",
+    "runs": "бежит",
+    "behind": "за, позади",
+    "but": "но",
+    "doesn't": "не (does not, про he / she / it)",
+    "see": "видеть",
+    "boom": "бум!",
+    "now": "теперь, сейчас",
+    "no": "нет, никаких (with no walls — без стен)",
+    "walls": "стены",
+    "what": "что? (what … playing — во что играют)",
+    "are": "есть, являются (are playing — играют сейчас)",
+    "who": "кто?",
+    "does": "помощник в вопросе про he / she / it (не переводится)",
+    "find": "находить",
+    "where": "где? куда? (where … from — откуда)",
+    "come": "приходить",
+    "from": "из, от (where … from — откуда)"
+  },
+  "sentences": [
+    {
+      "sentence": 2,
+      "options": [
+        "У них есть только один день, чтобы построить дом.",
+        "У них есть только одна ночь, чтобы построить дом.",
+        "У них был только один день, чтобы построить дом.",
+        "У них есть только один день, чтобы сломать дом."
+      ]
+    },
+    {
+      "sentence": 3,
+      "options": [
+        "Лео рубит деревья, а Макс находит камни.",
+        "Макс рубит деревья, а Лео находит камни.",
+        "Лео рубил деревья, а Макс нашёл камни.",
+        "Лео сажает деревья, а Макс находит камни."
+      ]
+    },
+    {
+      "sentence": 4,
+      "options": [
+        "Когда солнце садится, дом ещё не готов.",
+        "Когда солнце встаёт, дом ещё не готов.",
+        "Когда солнце садится, дом уже готов.",
+        "Когда солнце садилось, дом ещё не был готов."
+      ]
+    },
+    {
+      "sentence": 6,
+      "options": [
+        "Лео бежит за дом, но Макс не видит крипера.",
+        "Макс бежит за дом, но Лео не видит крипера.",
+        "Лео бежит за дом, и Макс видит крипера.",
+        "Лео бежит в дом, но Макс не видит крипера."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "question": "What are Max and Leo playing?",
+      "options": ["Во что играют Макс и Лео?", "Где играют Макс и Лео?", "Во что играли Макс и Лео?", "С кем играет Макс?"]
+    },
+    {
+      "question": "Who doesn't see the creeper?",
+      "options": ["Кто не видит крипера?", "Кого не видит крипер?", "Кто видит крипера?", "Где не видно крипера?"]
+    }
+  ],
+  "reading": [
+    {
+      "question": "What does Max find?",
+      "meaning": ["Что находит Макс?", "Что ищет Макс?", "Что находит Лео?", "Где Макс находит камни?"],
+      "evidence": 3,
+      "answers": ["Stones.", "Trees.", "A creeper."]
+    },
+    {
+      "question": "Is the house ready when the sun goes down?",
+      "meaning": ["Готов ли дом, когда садится солнце?", "Готов ли дом, когда встаёт солнце?", "Когда будет готов дом?", "Почему дом не готов?"],
+      "evidence": 4,
+      "answers": ["No, it isn't.", "Yes, it is.", "Yes, but it has no door."]
+    },
+    {
+      "question": "Where does the creeper come from?",
+      "meaning": ["Откуда приходит крипер?", "Куда идёт крипер?", "Когда приходит крипер?", "Кто такой крипер?"],
+      "evidence": 5,
+      "answers": ["From the dark forest.", "From the house.", "From the river."]
+    },
+    {
+      "question": "What doesn't the house have now?",
+      "meaning": ["Чего теперь нет у дома?", "Что теперь есть у дома?", "Где теперь дом?", "Чего не было у дома утром?"],
+      "evidence": 7,
+      "answers": ["Walls.", "A door.", "Windows."]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+// Checks the Reading Test texts: the TEXTS list in reading/index.html matches reading/texts/*.json,
+// every file has the shape the game expects, and every word of the text and the questions has a translation.
+// Usage: bin/check-reading. Exits with 1 on errors; unused glossary words are only reported.
+const fs = require('fs');
+const path = require('path');
+
+const dir = path.join(__dirname, '..', 'reading');
+const page = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+const listed = [...page.match(/const TEXTS = \[([^\]]*)\]/)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
+const files = fs.readdirSync(path.join(dir, 'texts')).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5));
+
+// The same words the page makes tappable.
+const WORD = /[A-Za-z]+(?:['’-][A-Za-z]+)*/g;
+const words = text => (text.match(WORD) || []).map(w => w.toLowerCase().replace('’', "'"));
+
+let errors = 0;
+const fail = (id, msg) => { errors++; console.log(`✗ ${id}: ${msg}`); };
+
+for (const id of listed) if (!files.includes(id)) fail(id, 'listed in TEXTS but there is no file');
+for (const id of files) if (!listed.includes(id)) fail(id, 'the file is not in TEXTS, the game never shows it');
+if (new Set(listed).size !== listed.length) fail('TEXTS', 'an id is listed twice');
+
+const isText = s => typeof s === 'string' && s.trim() !== '';
+function options(id, where, list, count) {
+  if (!Array.isArray(list) || list.length !== count || !list.every(isText)) return fail(id, `${where}: needs ${count} non-empty options`);
+  if (new Set(list).size !== count) fail(id, `${where}: options repeat`);
+}
+
+for (const id of files) {
+  let t;
+  try { t = JSON.parse(fs.readFileSync(path.join(dir, 'texts', `${id}.json`), 'utf8')); } catch (e) { fail(id, e.message); continue; }
+  const before = errors;
+
+  if (!isText(t.title) || !isText(t.topic)) fail(id, 'needs a title and a topic');
+  if (!Array.isArray(t.text) || t.text.length < 4 || !t.text.every(isText)) { fail(id, 'text: needs at least 4 sentences'); continue; }
+  const n = t.text.length;
+  const sentence = (where, i) => Number.isInteger(i) && i >= 1 && i <= n || fail(id, `${where}: sentence number ${i} is not 1–${n}`);
+
+  if (!Array.isArray(t.sentences) || t.sentences.length !== 4) fail(id, 'sentences: needs 4 tasks');
+  else t.sentences.forEach((s, i) => { sentence(`sentences[${i}]`, s.sentence); options(id, `sentences[${i}]`, s.options, 4); });
+
+  if (!Array.isArray(t.questions) || t.questions.length !== 2) fail(id, 'questions: needs 2 tasks');
+  else t.questions.forEach((q, i) => { if (!isText(q.question)) fail(id, `questions[${i}]: no question`); options(id, `questions[${i}]`, q.options, 4); });
+
+  if (!Array.isArray(t.reading) || t.reading.length !== 4) fail(id, 'reading: needs 4 tasks');
+  else t.reading.forEach((r, i) => {
+    if (!isText(r.question)) fail(id, `reading[${i}]: no question`);
+    options(id, `reading[${i}].meaning`, r.meaning, 4);
+    sentence(`reading[${i}].evidence`, r.evidence);
+    options(id, `reading[${i}].answers`, r.answers, 3);
+  });
+
+  const glossary = t.glossary && typeof t.glossary === 'object' ? t.glossary : {};
+  const shown = [...t.text, ...(t.questions || []).map(q => q.question), ...(t.reading || []).map(r => r.question)].filter(isText);
+  const used = new Set(shown.flatMap(words));
+  const missing = [...used].filter(w => !isText(glossary[w]));
+  if (missing.length) fail(id, `no translation for: ${missing.join(', ')}`);
+  const unused = Object.keys(glossary).filter(w => !used.has(w));
+  if (unused.length) console.log(`· ${id}: glossary words not in the text or questions: ${unused.join(', ')}`);
+
+  if (errors === before) console.log(`✓ ${id}: «${t.title}», ${n} sentences, ${used.size} words`);
+}
+
+process.exit(errors ? 1 : 0);

@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reading Test</title>
+<meta name="theme-color" content="#0b0820">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .logo { font-size: clamp(2.4rem, 12vw, 4.2rem); }
+  .rule-item .icon { font-size: 1.8rem; }
+
+  /* ---------- The text ---------- */
+  .story { padding: 18px 22px; margin-bottom: 20px; }
+  .story h2 { margin-bottom: 8px; font-size: 1.15rem; color: var(--muted); }
+  .story-text { margin: 0; font-size: clamp(1.15rem, 4.6vw, 1.35rem); line-height: 1.75; }
+  .s { border-radius: 8px; padding: 3px 1px; transition: background .2s; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .s.focus { background: rgba(255, 210, 63, .2); }
+  .s.right { background: rgba(93, 255, 143, .28); }
+  .s.wrong { background: rgba(255, 77, 109, .32); }
+  .story.picking .s { cursor: pointer; }
+  .story.picking .s:hover { background: rgba(34, 227, 255, .22); }
+  .story-tip { color: var(--muted); font-size: .9rem; margin: 10px 0 0; }
+  .story.picking { border-color: var(--cyan); box-shadow: 0 0 24px rgba(34, 227, 255, .35); }
+  .story.picking .story-tip { color: var(--cyan); font-weight: 800; font-size: 1rem; }
+
+  /* A word with a translation: tap it to peek. */
+  .w { cursor: pointer; border-radius: 4px; }
+  .w:hover { background: rgba(34, 227, 255, .14); }
+  .story.picking .w:hover { background: none; }
+  .w.peeked { text-decoration: underline dotted var(--yellow) 2px; text-underline-offset: 5px; }
+  .bubble {
+    position: absolute;
+    z-index: 20;
+    max-width: min(320px, calc(100vw - 24px));
+    padding: 8px 14px;
+    border-radius: 14px;
+    background: #1a1438;
+    border: 1px solid var(--yellow);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .5);
+    font-size: 1.05rem;
+    pointer-events: none;
+    animation: fadeIn .15s ease;
+  }
+  .bubble b { color: var(--yellow); }
+
+  /* ---------- Tasks ---------- */
+  .question { min-height: 0; padding: 18px 20px 22px; }
+  .q-label { margin-bottom: 8px; }
+  .en { margin: 0; font-size: clamp(1.3rem, 5.5vw, 1.7rem); font-weight: 600; line-height: 1.45; }
+
+  .answers { grid-template-columns: 1fr; gap: 10px; }
+  .ans {
+    font-size: clamp(1.05rem, 4.4vw, 1.25rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.35;
+    text-align: left;
+    padding: 14px 18px;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .ans:hover:not(:disabled) { border-color: var(--cyan); background: rgba(34, 227, 255, .08); }
+  .ans .n { color: var(--muted); font-weight: 600; margin-right: 8px; }
+
+  /* The reading task goes in three steps; the done ones shrink to a line each. */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .steps:empty { display: none; }
+  .steps li { padding: 10px 14px; border-radius: 14px; background: var(--panel); font-size: 1rem; line-height: 1.4; }
+  .steps li.ok { border: 1px solid rgba(93, 255, 143, .45); }
+  .steps li.bad { border: 1px solid rgba(255, 77, 109, .45); }
+  .steps li small { display: block; color: var(--muted); }
+  .stage { display: grid; gap: 10px; }
+  .stage-title { margin: 6px 0 0; font-weight: 800; font-size: 1.1rem; }
+  .stage-title small { color: var(--yellow); font-weight: 600; margin-left: 6px; }
+
+  /* ---------- Result ---------- */
+  .skills { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 1.05rem; }
+  .skills td { background: var(--panel); padding: 10px 12px; }
+  .skills td:first-child { border-radius: 12px 0 0 12px; }
+  .skills td:last-child { border-radius: 0 12px 12px 0; text-align: right; white-space: nowrap; font-weight: 800; }
+  .skills small { display: block; color: var(--muted); font-size: .85rem; }
+  .peeked-list { margin: 14px 0 0; line-height: 1.7; }
+  .peeked-list b { color: var(--yellow); }
+  .summary-note { color: var(--muted); margin: 14px 0 0; }
+  .mistakes b { color: var(--lime); }
+  .mistakes .en-line { font-weight: 600; }
+
+  /* Wide screens: the text on the left stays in sight, the tasks go on the right. */
+  @media (min-width: 1000px) {
+    .wrap:has(#game.active) { max-width: 1160px; }
+    #game.active { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; align-items: start; }
+    #game > * { grid-column: 2; }
+    #game > .topbar, #game > .progress { grid-column: 1 / -1; }
+    /* Rows: top bar, progress, the five task parts, then a filler so a long text doesn't spread the tasks apart. */
+    #game.active { grid-template-rows: repeat(7, auto) 1fr; }
+    #game > .story { grid-column: 1; grid-row: 3 / -1; position: sticky; top: 16px; margin-bottom: 0; }
+  }
+  @media (max-width: 480px) { .ans .n { display: none; } .story { padding: 14px 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="home" class="screen active">
+    <div class="hero">
+      <a class="back" href="../index.html">← Все игры</a>
+      <p class="greeting">Привет, <span data-player></span>! 👋</p>
+      <h1 class="logo"><span class="a">Reading</span> <span class="b">Test</span></h1>
+      <p class="tagline">Читаем и понимаем текст · <span id="bankInfo"></span></p>
+      <button class="btn big" id="startBtn">▶ Читать текст</button>
+    </div>
+
+    <div class="card">
+      <h2>📒 Как играть</h2>
+      <div class="rule">
+        <div class="rule-item"><span class="icon">📖</span><span>Каждая игра — новый короткий текст и <b>10 заданий</b> по нему. Текст всё время перед глазами.</span></div>
+        <div class="rule-item"><span class="icon">🔤</span><span><b>1–4.</b> Выбери перевод предложения. Смотри в оба: кто кого, есть ли «не», какое время.</span></div>
+        <div class="rule-item"><span class="icon">❓</span><span><b>5–6.</b> Выбери, что значит вопрос.</span></div>
+        <div class="rule-item"><span class="icon">🔎</span><span><b>7–10.</b> Настоящий reading test в три шага: пойми вопрос (3 балла), найди в тексте предложение с ответом (3), выбери ответ (4).</span></div>
+        <div class="rule-item"><span class="icon">👀</span><span>Не знаешь слово? <b>Нажми на него</b> — увидишь перевод. Баллы за это не снимаются, а подсмотренные слова будут в конце, чтобы их запомнить.</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/results.js"></script>
+<script src="../shared/quiz.js"></script>
+<script>
+// The texts, one file each in texts/: a round is one text and its ten tasks.
+// New texts are played first in this order, then the one not played for the longest.
+// To add a text, put texts/<id>.json next to the others, add the id here and run bin/check-reading.
+const TEXTS = [
+  'pugs-1',
+  'minecraft-1',
+  'kipling-1',
+  'space-1',
+  'dinosaurs-1',
+  'roblox-1',
+  'brawlstars-1',
+];
+
+// A text file:
+// {
+//   "title": "Bob the Pug", "topic": "pugs",
+//   "text": ["Sentence one.", "Sentence two.", ...],
+//   "glossary": { "word": "перевод", ... },   every word of the text and of the questions, lowercase, as it is written
+//   "sentences": [{ "sentence": 3, "options": ["верный перевод", "неверный", "неверный", "неверный"] }, × 4],
+//   "questions": [{ "question": "Where does Bob live?", "options": ["верный смысл", "…", "…", "…"] }, × 2],
+//   "reading": [{ "question": "…?", "meaning": ["верный смысл", "…", "…", "…"], "evidence": 4, "answers": ["верный", "…", "…"] }, × 4]
+// }
+// Sentence numbers start from 1. The first option is always the right one; they are shuffled when shown.
+// The wrong translations differ from the right one in one thing: who does what to whom, "not", the tense, a preposition.
+
+const TEXTS_KEY = 'reading-texts-v1';
+const STEP_POINTS = [3, 3, 4];
+const SKILLS = [
+  ['sentences', '🔤 Понимаю предложения', 'задания 1–4'],
+  ['questions', '❓ Понимаю вопросы', 'задания 5–6 и шаг 1 в 7–10'],
+  ['evidence', '🔎 Нахожу ответ в тексте', 'шаг 2 в 7–10'],
+  ['answers', '✅ Отвечаю', 'шаг 3 в 7–10'],
+];
+const LABELS = { sentence: 'Выбери перевод', question: 'Что значит вопрос?', reading: 'Вопрос по тексту' };
+
+// ---------- Which text is next ----------
+// { id: { plays, best, last } } for every finished text.
+const played = () => store.get(TEXTS_KEY, {});
+
+function nextText() {
+  const seen = played();
+  return TEXTS.find(id => !seen[id])
+    ?? TEXTS.reduce((a, b) => seen[b].last < seen[a].last ? b : a);
+}
+
+function renderBankInfo() {
+  const seen = played();
+  const done = TEXTS.filter(id => seen[id]).length;
+  $('bankInfo').textContent = done < TEXTS.length
+    ? `прочитано ${done} из ${TEXTS.length} текстов`
+    : `все ${TEXTS.length} текстов прочитаны, теперь по второму кругу`;
+}
+
+// ---------- The text on screen ----------
+const WORD = /([A-Za-z]+(?:['’-][A-Za-z]+)*)/;
+const keyOf = word => word.toLowerCase().replace('’', "'");
+
+// The round being played: the text, its glossary and the words peeked so far.
+let round = null;
+
+// English text as nodes where every word with a translation can be tapped.
+function wordNodes(text) {
+  return text.split(WORD).filter(Boolean).map(part => {
+    const key = keyOf(part);
+    if (!WORD.test(part) || !round.glossary[key]) return part;
+    const w = el('span', 'w', part);
+    w.dataset.key = key;
+    if (round.peeked.has(key)) w.classList.add('peeked');
+    return w;
+  });
+}
+
+const bubble = el('div', 'bubble');
+bubble.hidden = true;
+document.body.append(bubble);
+let bubbleTimer;
+
+function peek(w) {
+  const key = w.dataset.key;
+  round.peeked.set(key, round.glossary[key]);
+  document.querySelectorAll(`.w[data-key="${CSS.escape(key)}"]`).forEach(n => n.classList.add('peeked'));
+
+  bubble.replaceChildren(el('b', null, w.textContent), ` — ${round.glossary[key]}`);
+  bubble.hidden = false;
+  const r = w.getBoundingClientRect();
+  const width = bubble.offsetWidth;
+  const left = Math.max(12, Math.min(r.left + r.width / 2 - width / 2, document.documentElement.clientWidth - width - 12));
+  bubble.style.left = `${left + scrollX}px`;
+  bubble.style.top = `${r.bottom + scrollY + 8}px`;
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(hideBubble, 4000);
+}
+
+function hideBubble() {
+  bubble.hidden = true;
+}
+
+document.addEventListener('click', e => {
+  const w = e.target.closest?.('.w');
+  if (w && round && !story.classList.contains('picking')) peek(w);
+  else hideBubble();
+});
+
+// The text card stays in the game screen above the tasks (beside them on wide screens), placed once quiz() builds it.
+const story = el('div', 'card story');
+const storyTitle = el('h2');
+const storyText = el('p', 'story-text');
+const storyTip = el('p', 'story-tip');
+story.append(storyTitle, storyText, storyTip);
+
+const TIP = '👆 Нажми на незнакомое слово — увидишь перевод';
+let onPick = null;
+
+function renderStory() {
+  storyTitle.textContent = `📖 ${round.title}`;
+  storyText.replaceChildren(...round.text.flatMap((sentence, i) => {
+    const s = el('span', 's');
+    s.dataset.n = i + 1;
+    s.append(...wordNodes(sentence));
+    return i ? [' ', s] : [s];
+  }));
+  resetStory();
+}
+
+const sentenceNode = n => storyText.querySelector(`.s[data-n="${n}"]`);
+
+function resetStory() {
+  onPick = null;
+  story.classList.remove('picking');
+  storyTip.textContent = TIP;
+  storyText.querySelectorAll('.s').forEach(s => s.className = 's');
+}
+
+// Waits for a tap on a sentence of the text, then calls back with its number.
+function pickSentence(callback) {
+  onPick = callback;
+  story.classList.add('picking');
+  storyTip.textContent = '👆 Нажми на предложение, где есть ответ';
+  story.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+storyText.addEventListener('click', e => {
+  const s = e.target.closest('.s');
+  if (!s || !onPick) return;
+  const callback = onPick;
+  onPick = null;
+  story.classList.remove('picking');
+  storyTip.textContent = TIP;
+  callback(+s.dataset.n);
+});
+
+// ---------- Dealing ----------
+async function deal() {
+  const id = nextText();
+  const response = await fetch(`texts/${id}.json`);
+  if (!response.ok) throw new Error(`texts/${id}.json: ${response.status}`);
+  const text = await response.json();
+  round = { id, ...text, peeked: new Map() };
+  renderStory();
+  return [
+    ...text.sentences.map(t => ({ kind: 'sentence', ...t })),
+    ...text.questions.map(t => ({ kind: 'question', ...t })),
+    ...text.reading.map(t => ({ kind: 'reading', ...t })),
+  ];
+}
+
+// ---------- Tasks ----------
+const sentenceText = n => round.text[n - 1];
+const enLine = text => { const p = el('p', 'en'); p.append(...wordNodes(text)); return p; };
+const numbered = list => list.map((option, i) => ({ ...option, label: [el('span', 'n', i + 1), option.text] }));
+// The first option of the data is the right one.
+const shuffled = options => numbered(shuffle(options.map((text, i) => ({ text, ok: i === 0 }))));
+
+function question(item) {
+  resetStory();
+  if (item.kind === 'sentence') {
+    sentenceNode(item.sentence).classList.add('focus');
+    return [enLine(sentenceText(item.sentence))];
+  }
+  return [enLine(item.question)];
+}
+
+function optionButtons(texts, onAnswer) {
+  const options = shuffled(texts);
+  const buttons = options.map(option => {
+    const btn = el('button', 'ans');
+    btn.append(...option.label);
+    btn.onclick = () => {
+      buttons.forEach((b, j) => {
+        b.disabled = true;
+        if (options[j].ok) b.classList.add('right');
+      });
+      if (!option.ok) btn.classList.add('wrong');
+      onAnswer(option.ok, option.text);
+    };
+    return btn;
+  });
+  return buttons;
+}
+
+// Reading task: what the question means → which sentence answers it → the answer. Points for each step.
+function play(item, settle) {
+  const steps = el('ol', 'steps');
+  const stage = el('div', 'stage');
+  const picked = { ok: [], meaning: null, sentence: null, answer: null };
+  const STEP_MS = 700;
+
+  const log = (ok, title, text, fix) => {
+    const li = el('li', ok ? 'ok' : 'bad', `${ok ? '✅' : '❌'} ${title}: ${text}`);
+    if (!ok) li.append(el('small', null, `Правильно: ${fix}`));
+    steps.append(li);
+    picked.ok.push(ok);
+  };
+  const title = (n, text) => {
+    const p = el('p', 'stage-title', `${n}. ${text}`);
+    p.append(el('small', null, `+${STEP_POINTS[n - 1]}`));
+    return p;
+  };
+
+  function meaning() {
+    stage.replaceChildren(title(1, 'Что спрашивают?'), ...optionButtons(item.meaning, (ok, text) => {
+      picked.meaning = text;
+      setTimeout(() => { log(ok, 'Вопрос', text, item.meaning[0]); evidence(); }, STEP_MS);
+    }));
+  }
+
+  function evidence() {
+    stage.replaceChildren(title(2, 'Найди в тексте предложение, где есть ответ'));
+    pickSentence(n => {
+      const ok = n === item.evidence;
+      picked.sentence = n;
+      sentenceNode(item.evidence).classList.add('right');
+      if (!ok) sentenceNode(n).classList.add('wrong');
+      log(ok, 'Предложение', sentenceText(n), sentenceText(item.evidence));
+      answer();
+      stage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  function answer() {
+    stage.replaceChildren(title(3, 'Выбери ответ'), ...optionButtons(item.answers, (ok, text) => {
+      picked.answer = text;
+      picked.ok.push(ok);
+      const points = picked.ok.reduce((sum, ok, i) => sum + (ok ? STEP_POINTS[i] : 0), 0);
+      settle(picked.ok.every(Boolean), picked, points);
+    }));
+  }
+
+  meaning();
+  return [steps, stage];
+}
+
+function hint(item) {
+  if (item.kind !== 'reading') return [el('span', 'check', item.options[0])];
+  return [
+    el('span', 'check', item.answers[0]),
+    el('span', 'why', `В тексте: «${sentenceText(item.evidence)}»`),
+  ];
+}
+
+function mistake(item, picked) {
+  const sub = el('span', 'sub');
+  if (item.kind !== 'reading') {
+    const en = item.kind === 'sentence' ? sentenceText(item.sentence) : item.question;
+    sub.append('Нажато ', el('s', null, picked.text));
+    return [el('span', 'en-line', en), ' → ', el('b', null, item.options[0]), sub];
+  }
+  const [meaningOk, sentenceOk, answerOk] = picked.ok;
+  sub.append([
+    !meaningOk && `вопрос значит «${item.meaning[0]}»`,
+    !sentenceOk && `ответ в предложении «${sentenceText(item.evidence)}»`,
+    !answerOk && `нажато «${picked.answer}»`,
+  ].filter(Boolean).join(' · '));
+  return [el('span', 'en-line', item.question), ' → ', el('b', null, item.answers[0]), sub];
+}
+
+// ---------- Result ----------
+// Points per skill: the reading task's steps count to questions, evidence and answers.
+function skillPoints(answers) {
+  const got = { sentences: 0, questions: 0, evidence: 0, answers: 0 };
+  const max = { ...got };
+  const add = (skill, points, ok) => { max[skill] += points; if (ok) got[skill] += points; };
+  answers.forEach(({ item, ok, picked }) => {
+    if (item.kind === 'sentence') add('sentences', POINTS, ok);
+    else if (item.kind === 'question') add('questions', POINTS, ok);
+    else ['questions', 'evidence', 'answers'].forEach((skill, i) => add(skill, STEP_POINTS[i], picked.ok[i]));
+  });
+  return { got, max };
+}
+
+function summary(answers, score) {
+  const seen = played();
+  const prev = seen[round.id];
+  seen[round.id] = { plays: (prev?.plays ?? 0) + 1, best: Math.max(prev?.best ?? 0, score), last: Date.now() };
+  store.set(TEXTS_KEY, seen);
+  renderBankInfo();
+
+  const { got, max } = skillPoints(answers);
+  const table = el('table', 'skills');
+  SKILLS.forEach(([skill, name, where]) => {
+    const share = got[skill] / max[skill];
+    const mark = share === 1 ? '✅' : share >= .5 ? '👍' : '⚠️';
+    const tr = el('tr');
+    const td = el('td', null, name);
+    td.append(el('small', null, where));
+    tr.append(td, el('td', null, `${got[skill]} / ${max[skill]} ${mark}`));
+    table.append(tr);
+  });
+
+  const nodes = [el('h2', null, `📊 «${round.title}»: что получилось`), table];
+  const words = [...round.peeked];
+  const peeked = el('p', 'peeked-list');
+  if (words.length) {
+    peeked.append(`👀 Подсмотрел слов: ${words.length}. Запомни их: `);
+    words.forEach(([word, translation], i) => peeked.append(i ? ' · ' : '', el('b', null, word), ` — ${translation}`));
+  } else {
+    peeked.textContent = '💪 Ни одного подсмотренного слова!';
+  }
+  nodes.push(peeked);
+  if (prev) nodes.push(el('p', 'summary-note', `Этот текст ты уже читал: лучший результат был ${prev.best}.`));
+  return nodes;
+}
+
+quiz({
+  id: 'reading',
+  label: item => LABELS[item.kind],
+  keys: 'Клавиши <b>1</b>–<b>4</b> — вариант · <b>Enter</b> — дальше',
+  deal,
+  question,
+  options: item => item.kind === 'reading' ? undefined : shuffled(item.options),
+  play,
+  reveal: () => { onPick = null; },
+  hint,
+  mistake,
+  summary,
+});
+
+$('questionCard').before(story);
+renderBankInfo();
+</script>
+</body>
+</html>

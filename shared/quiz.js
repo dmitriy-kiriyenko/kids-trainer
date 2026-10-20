@@ -37,14 +37,17 @@ if (!PLAYER) location.replace('../index.html');
 
 /**
  * id: localStorage prefix for records and stats.
- * label, keys: text above the question and the keyboard hint (HTML).
- * deal(): QUESTIONS fresh items. question(item): nodes of the question card.
+ * label, keys: text above the question and the keyboard hint (HTML); label may be a function of the item.
+ * deal(): QUESTIONS fresh items, or a promise of them. question(item): nodes of the question card.
  * The answers are either
  *   options(item): answer buttons in display order, [{ label, cls, ok }]; keys 1–9 pick them, or
- *   play(item, settle): nodes the game runs itself until it calls settle(ok, picked) once.
+ *   play(item, settle): nodes the game runs itself until it calls settle(ok, picked, points) once.
+ *   points defaults to POINTS when ok and 0 otherwise; a partly right answer is not ok and goes to the mistakes.
  * reveal(item, ok): optional, updates the question once answered.
  * hint(item, picked), mistake(item, picked): nodes explaining the answer, in the hint and in the mistakes list.
  *   picked is the chosen option, or whatever play() passed to settle().
+ * summary(answers, score): optional, nodes of an extra card on the result screen, called once per finished game.
+ *   answers are [{ item, ok, picked, points }] in the order of the questions.
  */
 function quiz(def) {
   const RECORDS_KEY = recordsKey(def.id);
@@ -74,7 +77,7 @@ function quiz(def) {
       <div class="progress"><div id="bar"></div></div>
 
       <div class="card question" id="questionCard">
-        <div class="q-label">${def.label}</div>
+        <div class="q-label" id="qLabel"></div>
         <div id="question"></div>
       </div>
 
@@ -95,6 +98,8 @@ function quiz(def) {
         <p class="result-msg" id="resMsg"></p>
         <p class="result-note" id="resNote"></p>
       </div>
+
+      <div class="card" id="summaryCard" hidden></div>
 
       <div class="card" id="mistakesCard" hidden>
         <h2>📝 Работа над ошибками</h2>
@@ -219,9 +224,23 @@ function quiz(def) {
     $('nextBtn').classList.remove('auto');
   }
 
-  function startGame() {
+  let dealing = false;
+
+  async function startGame() {
+    if (dealing) return;
     stopTimer();
-    game = { items: def.deal(), index: 0, score: 0, mistakes: [], answered: false, timer: null };
+    dealing = true;
+    let items;
+    try {
+      items = await def.deal();
+    } catch (e) {
+      console.error(e);
+      alert('Не получилось начать игру. Проверь интернет и попробуй ещё раз.');
+      return;
+    } finally {
+      dealing = false;
+    }
+    game = { items, index: 0, score: 0, mistakes: [], answers: [], answered: false, timer: null };
     show('game');
     renderQuestion();
   }
@@ -234,6 +253,7 @@ function quiz(def) {
     $('counter').textContent = `${game.index + 1} / ${QUESTIONS}`;
     $('stars').textContent = `⭐ ${game.score}`;
     $('bar').style.width = `${game.index / QUESTIONS * 100}%`;
+    $('qLabel').innerHTML = typeof def.label === 'function' ? def.label(item) : def.label;
     $('question').replaceChildren(...def.question(item));
 
     const card = $('questionCard');
@@ -263,21 +283,24 @@ function quiz(def) {
     settle(ok, game.options[i]);
   }
 
-  function settle(ok, picked) {
+  function settle(ok, picked, points = ok ? POINTS : 0) {
     if (!game || game.answered) return;
     game.answered = true;
 
     const item = game.items[game.index];
-    if (ok) game.score += POINTS; else game.mistakes.push([item, picked]);
+    game.score += points;
+    game.answers.push({ item, ok, picked, points });
+    if (!ok) game.mistakes.push([item, picked]);
     def.reveal?.(item, ok);
 
     const hint = el('div', `hint ${ok ? 'ok' : 'bad'}`);
-    hint.append(el('span', 'verdict', ok ? '✅ Верно!' : '❌ Ошибка!'), ...def.hint(item, picked));
+    const verdict = ok ? '✅ Верно!' : points ? `🟡 +${points} из ${POINTS}` : '❌ Ошибка!';
+    hint.append(el('span', 'verdict', verdict), ...def.hint(item, picked));
     $('feedback').replaceChildren(hint);
 
     const stars = $('stars');
     stars.textContent = `⭐ ${game.score}`;
-    if (ok) { stars.classList.remove('bump'); stars.offsetWidth; stars.classList.add('bump'); }
+    if (points) { stars.classList.remove('bump'); stars.offsetWidth; stars.classList.add('bump'); }
     else $('questionCard').classList.add('shake');
     $('bar').style.width = `${(game.index + 1) / QUESTIONS * 100}%`;
 
@@ -314,8 +337,12 @@ function quiz(def) {
 
   // ---------- Result ----------
   function finish() {
-    const { score, mistakes } = game;
+    const { score, mistakes, answers } = game;
     game = null;
+
+    const summary = def.summary?.(answers, score);
+    $('summaryCard').hidden = !summary;
+    $('summaryCard').replaceChildren(...summary ?? []);
 
     const prevBest = loadRecords()[0]?.score;
     const at = Date.now();

@@ -1,0 +1,155 @@
+{
+  "title": "Tiny",
+  "topic": "dinosaurs",
+  "text": [
+    "Tiny is a young dinosaur, but he is not tiny at all.",
+    "He is taller than the trees, and his feet are bigger than rocks.",
+    "The other dinosaurs are afraid of him.",
+    "They run away when they hear his loud steps.",
+    "But Tiny only eats leaves and flowers.",
+    "He wants to play, but nobody plays with him.",
+    "One day a little dinosaur fell into a river.",
+    "Tiny pulled him out with his long neck, and now they are best friends."
+  ],
+  "glossary": {
+    "tiny": "крошечный (а ещё так зовут динозавра — Тайни)",
+    "is": "есть, является (часто не переводится)",
+    "a": "артикль: один, какой-то (не переводится)",
+    "young": "молодой",
+    "dinosaur": "динозавр",
+    "but": "но",
+    "he": "он",
+    "not": "не",
+    "at": "(not … at all — совсем не)",
+    "all": "все (not … at all — совсем не)",
+    "taller": "выше",
+    "than": "чем",
+    "the": "артикль (не переводится)",
+    "trees": "деревья",
+    "and": "и, а",
+    "his": "его, свой",
+    "feet": "ноги, ступни (одна — foot)",
+    "are": "есть, являются (часто не переводится)",
+    "bigger": "больше",
+    "rocks": "камни, скалы",
+    "other": "другой, другие",
+    "dinosaurs": "динозавры",
+    "afraid": "испуганный (be afraid of — бояться)",
+    "of": "(afraid of — бояться кого-то)",
+    "him": "его, ему",
+    "they": "они",
+    "run": "бегут (run away — убегают)",
+    "away": "прочь (run away — убегать)",
+    "when": "когда",
+    "hear": "слышат",
+    "loud": "громкий",
+    "steps": "шаги",
+    "only": "только",
+    "eats": "ест",
+    "leaves": "листья",
+    "flowers": "цветы",
+    "wants": "хочет",
+    "to": "в (куда); перед глаголом не переводится",
+    "play": "играть",
+    "nobody": "никто",
+    "plays": "играет",
+    "with": "с",
+    "one": "один (one day — однажды)",
+    "day": "день (one day — однажды)",
+    "little": "маленький",
+    "fell": "упал (fall — падать)",
+    "into": "в (внутрь чего-то)",
+    "river": "река",
+    "pulled": "вытащил, потянул (pull out — вытащить)",
+    "out": "наружу (pull out — вытащить)",
+    "long": "длинный",
+    "neck": "шея",
+    "now": "теперь, сейчас",
+    "best": "лучший (best friends — лучшие друзья)",
+    "friends": "друзья",
+    "why": "почему?",
+    "what": "что?",
+    "does": "помощник в вопросе про he / she / it (не переводится)",
+    "eat": "есть, кушать",
+    "do": "делать; помощник в вопросе (не переводится)",
+    "where": "где? куда?",
+    "did": "помощник в вопросе о прошлом (не переводится)",
+    "fall": "падать, упасть",
+    "how": "как?",
+    "help": "помогать, помочь"
+  },
+  "sentences": [
+    {
+      "sentence": 3,
+      "options": [
+        "Другие динозавры боятся его.",
+        "Он боится других динозавров.",
+        "Другие динозавры не боятся его.",
+        "Другие динозавры боялись его."
+      ]
+    },
+    {
+      "sentence": 4,
+      "options": [
+        "Они убегают, когда слышат его громкие шаги.",
+        "Они прибегают, когда слышат его громкие шаги.",
+        "Они убегают, когда слышат его тихие шаги.",
+        "Он убегает, когда слышит их громкие шаги."
+      ]
+    },
+    {
+      "sentence": 6,
+      "options": [
+        "Он хочет играть, но никто с ним не играет.",
+        "Он не хочет играть, и никто с ним не играет.",
+        "Он хочет играть, и все с ним играют.",
+        "Он хотел играть, но никто с ним не играл."
+      ]
+    },
+    {
+      "sentence": 7,
+      "options": [
+        "Однажды маленький динозаврик упал в реку.",
+        "Однажды маленький динозаврик прыгнул в реку.",
+        "Однажды маленький динозаврик упал возле реки.",
+        "Однажды Тайни упал в реку."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "question": "Why are the dinosaurs afraid of Tiny?",
+      "options": ["Почему динозавры боятся Тайни?", "Почему Тайни боится динозавров?", "Почему динозавры не боятся Тайни?", "Какие динозавры боятся Тайни?"]
+    },
+    {
+      "question": "What does Tiny eat?",
+      "options": ["Что ест Тайни?", "Кто ест Тайни?", "Что ел Тайни?", "Где ест Тайни?"]
+    }
+  ],
+  "reading": [
+    {
+      "question": "What is bigger than rocks?",
+      "meaning": ["Что больше камней?", "Что меньше камней?", "Где большие камни?", "Кто сильнее камней?"],
+      "evidence": 2,
+      "answers": ["Tiny's feet.", "The trees.", "The other dinosaurs."]
+    },
+    {
+      "question": "What do the dinosaurs do when they hear Tiny?",
+      "meaning": ["Что делают динозавры, когда слышат Тайни?", "Что делает Тайни, когда слышит динозавров?", "Что слышат динозавры?", "Что делали динозавры, когда видели Тайни?"],
+      "evidence": 4,
+      "answers": ["They run away.", "They play with him.", "They eat leaves."]
+    },
+    {
+      "question": "Where did the little dinosaur fall?",
+      "meaning": ["Куда упал маленький динозаврик?", "Почему упал маленький динозаврик?", "Куда упал Тайни?", "Когда упал маленький динозаврик?"],
+      "evidence": 7,
+      "answers": ["Into a river.", "From a tree.", "Into a hole."]
+    },
+    {
+      "question": "How did Tiny help the little dinosaur?",
+      "meaning": ["Как Тайни помог маленькому динозаврику?", "Почему Тайни помог маленькому динозаврику?", "Как маленький динозаврик помог Тайни?", "Когда Тайни помог маленькому динозаврику?"],
+      "evidence": 8,
+      "answers": ["He pulled him out with his neck.", "He gave him some leaves.", "He jumped into the river."]
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "title": "The Cat That Walked by Herself",
+  "topic": "kipling",
+  "text": [
+    "Long ago, all the animals were wild.",
+    "The Woman lived in a cave with the Man.",
+    "One day the Dog came to the cave because he wanted to eat.",
+    "The Woman gave him a bone, and the Dog became their friend.",
+    "Then the Horse and the Cow came, and they became friends too.",
+    "The Cat didn't want to be a friend.",
+    "She said, \"I am the Cat, and I walk by myself.\"",
+    "But at night she sat near the fire, because it was warm."
+  ],
+  "glossary": {
+    "long": "давно (long ago — давным-давно)",
+    "ago": "назад (long ago — давным-давно)",
+    "all": "все",
+    "the": "артикль (не переводится)",
+    "animals": "животные",
+    "were": "были",
+    "wild": "дикие",
+    "woman": "женщина",
+    "lived": "жил, жила",
+    "in": "в",
+    "a": "артикль: один, какой-то (не переводится)",
+    "cave": "пещера",
+    "with": "с",
+    "man": "мужчина",
+    "one": "один (one day — однажды)",
+    "day": "день (one day — однажды)",
+    "dog": "собака, пёс",
+    "came": "пришёл, пришли (come — приходить)",
+    "to": "к, в (куда); перед глаголом не переводится",
+    "because": "потому что",
+    "he": "он",
+    "she": "она",
+    "wanted": "хотел",
+    "eat": "есть, кушать",
+    "gave": "дал, дала (give — давать)",
+    "him": "ему, его",
+    "bone": "кость",
+    "and": "и, а",
+    "became": "стал, стали (become — становиться)",
+    "their": "их",
+    "friend": "друг",
+    "then": "потом, затем",
+    "horse": "лошадь, конь",
+    "cow": "корова",
+    "they": "они",
+    "friends": "друзья",
+    "too": "тоже",
+    "cat": "кошка",
+    "didn't": "не (did not, про прошлое)",
+    "want": "хотеть",
+    "be": "быть",
+    "said": "сказала (say — говорить)",
+    "i": "я",
+    "am": "есть, являюсь (I am — я)",
+    "walk": "гуляю, хожу",
+    "by": "(by myself — сам по себе)",
+    "myself": "себя (by myself — сам по себе)",
+    "but": "но",
+    "at": "в (at night — ночью)",
+    "night": "ночь (at night — ночью)",
+    "sat": "сидела (sit — сидеть)",
+    "near": "рядом, возле, у",
+    "fire": "огонь, костёр",
+    "it": "оно (it was warm — было тепло)",
+    "was": "был, было",
+    "warm": "тёплый, тепло",
+    "why": "почему?",
+    "did": "помощник в вопросе о прошлом (не переводится)",
+    "come": "приходить",
+    "what": "что?",
+    "say": "говорить, сказать",
+    "where": "где? куда?",
+    "live": "жить",
+    "give": "давать, дать",
+    "which": "какой? который?",
+    "after": "после",
+    "sit": "сидеть"
+  },
+  "sentences": [
+    {
+      "sentence": 3,
+      "options": [
+        "Однажды Пёс пришёл к пещере, потому что хотел есть.",
+        "Однажды Пёс ушёл из пещеры, потому что хотел есть.",
+        "Однажды Пёс пришёл к пещере, потому что не хотел есть.",
+        "Однажды Пёс придёт к пещере, потому что захочет есть."
+      ]
+    },
+    {
+      "sentence": 4,
+      "options": [
+        "Женщина дала ему кость, и Пёс стал их другом.",
+        "Пёс дал Женщине кость и стал её другом.",
+        "Женщина дала ему кость, но Пёс не стал их другом.",
+        "Женщина даст ему кость, и Пёс станет их другом."
+      ]
+    },
+    {
+      "sentence": 6,
+      "options": [
+        "Кошка не хотела быть другом.",
+        "Кошка хотела быть другом.",
+        "Кошка не хочет быть другом.",
+        "Никто не хотел дружить с Кошкой."
+      ]
+    },
+    {
+      "sentence": 8,
+      "options": [
+        "Но ночью она сидела у огня, потому что там было тепло.",
+        "Но ночью она сидела далеко от огня, потому что там было тепло.",
+        "Но днём она сидела у огня, потому что там было тепло.",
+        "Но ночью она сидела у огня, потому что там было холодно."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "question": "Why did the Dog come to the cave?",
+      "options": ["Почему Пёс пришёл к пещере?", "Когда Пёс пришёл к пещере?", "Почему Пёс ушёл из пещеры?", "Почему Пёс не пришёл к пещере?"]
+    },
+    {
+      "question": "What did the Cat say?",
+      "options": ["Что сказала Кошка?", "Что сказали Кошке?", "Кому Кошка это сказала?", "Что скажет Кошка?"]
+    }
+  ],
+  "reading": [
+    {
+      "question": "Where did the Woman live?",
+      "meaning": ["Где жила Женщина?", "Где живёт Женщина?", "С кем жила Женщина?", "Когда жила Женщина?"],
+      "evidence": 2,
+      "answers": ["In a cave.", "In a house.", "Near the river."]
+    },
+    {
+      "question": "What did the Woman give the Dog?",
+      "meaning": ["Что Женщина дала Псу?", "Что Пёс дал Женщине?", "Кому Женщина дала кость?", "Что Женщина взяла у Пса?"],
+      "evidence": 4,
+      "answers": ["A bone.", "Some milk.", "Some fish."]
+    },
+    {
+      "question": "Which animals came after the Dog?",
+      "meaning": ["Какие животные пришли после Пса?", "Какие животные пришли перед Псом?", "Какие животные ушли после Пса?", "Сколько животных пришло после Пса?"],
+      "evidence": 5,
+      "answers": ["The Horse and the Cow.", "The Cat and the Cow.", "The Horse and the Cat."]
+    },
+    {
+      "question": "Why did the Cat sit near the fire?",
+      "meaning": ["Почему Кошка сидела у огня?", "Где сидела Кошка?", "Почему Кошка не сидела у огня?", "Когда Кошка сидела у огня?"],
+      "evidence": 8,
+      "answers": ["Because it was warm.", "Because she was hungry.", "Because the Woman asked her."]
+    }
+  ]
+}

@@ -226,12 +226,6 @@ function hideBubble() {
   bubble.hidden = true;
 }
 
-document.addEventListener('click', e => {
-  const w = e.target.closest?.('.w');
-  if (w && round && !story.classList.contains('picking')) peek(w);
-  else hideBubble();
-});
-
 // The text card stays in the game screen above the tasks (beside them on wide screens), placed once quiz() builds it.
 const story = el('div', 'card story');
 const storyTitle = el('h2');
@@ -270,14 +264,22 @@ function pickSentence(callback) {
   story.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-storyText.addEventListener('click', e => {
-  const s = e.target.closest('.s');
-  if (!s || !onPick) return;
-  const callback = onPick;
-  onPick = null;
-  story.classList.remove('picking');
-  storyTip.textContent = TIP;
-  callback(+s.dataset.n);
+// One handler for every tap, so a tap is either a pick or a peek, never both:
+// while a sentence is being picked, words don't translate anywhere.
+document.addEventListener('click', e => {
+  hideBubble();
+  if (onPick) {
+    const s = storyText.contains(e.target) && e.target.closest('.s');
+    if (!s) return;
+    const callback = onPick;
+    onPick = null;
+    story.classList.remove('picking');
+    storyTip.textContent = TIP;
+    callback(+s.dataset.n);
+    return;
+  }
+  const w = e.target.closest?.('.w');
+  if (w && round) peek(w);
 });
 
 // ---------- Dealing ----------

@@ -48,6 +48,9 @@ if (!PLAYER) location.replace('../index.html');
  *   picked is the chosen option, or whatever play() passed to settle().
  * summary(answers, score): optional, nodes of an extra card on the result screen, called once per finished game.
  *   answers are [{ item, ok, picked, points }] in the order of the questions.
+ * timed: optional, shows a stopwatch that runs while a question waits for its answer; records keep the time
+ *   and equal scores rank by it, faster first.
+ * autoNext: optional, ms before moving on after a right answer, AUTO_NEXT_MS by default.
  */
 function quiz(def) {
   const RECORDS_KEY = recordsKey(def.id);
@@ -75,6 +78,7 @@ function quiz(def) {
         <span class="stars" id="stars">⭐ 0</span>
       </div>
       <div class="progress"><div id="bar"></div></div>
+      ${def.timed ? '<div class="clock" id="clock"><span class="clock-icon">⏱</span><span id="clockTime"></span></div>' : ''}
 
       <div class="card question" id="questionCard">
         <div class="q-label" id="qLabel"></div>
@@ -95,6 +99,7 @@ function quiz(def) {
       <div class="card result-head">
         <div class="result-emoji" id="resEmoji"></div>
         <div class="result-score"><span id="resScore">0</span><small>/100</small></div>
+        ${def.timed ? '<div class="result-time" id="resTime"></div>' : ''}
         <p class="result-msg" id="resMsg"></p>
         <p class="result-note" id="resNote"></p>
       </div>
@@ -129,20 +134,21 @@ function quiz(def) {
       </form>
     </dialog>`);
 
-  // Equal scores: the fresher one is higher and pushes the older one out of the top.
+  // Equal scores: the faster one is higher in a timed game; otherwise the fresher one, pushing the older one out of the top.
+  const byRank = (a, b) => b.score - a.score || (a.ms ?? 0) - (b.ms ?? 0) || b.at - a.at;
   const sortRecords = records => records
     .filter(r => r && typeof r.score === 'number')
-    .sort((a, b) => b.score - a.score || b.at - a.at)
+    .sort(byRank)
     .slice(0, TOP);
 
   const loadRecords = () => sortRecords(store.get(RECORDS_KEY, []));
   const loadStats = () => store.get(STATS_KEY, { games: 0, total: 0 });
 
-  function saveResult(score, at) {
-    const records = sortRecords([...loadRecords(), { score, at }]);
+  function saveResult(record) {
+    const records = sortRecords([...loadRecords(), record]);
     const stats = loadStats();
     store.set(RECORDS_KEY, records);
-    store.set(STATS_KEY, { games: stats.games + 1, total: stats.total + score });
+    store.set(STATS_KEY, { games: stats.games + 1, total: stats.total + record.score });
     return records;
   }
 
@@ -175,7 +181,7 @@ function quiz(def) {
 
     const table = el('table', 'board');
     const head = el('tr');
-    ['#', 'Баллы', 'Когда'].forEach(t => head.append(el('th', null, t)));
+    ['#', 'Баллы', ...def.timed ? ['Время'] : [], 'Когда'].forEach(t => head.append(el('th', null, t)));
     table.append(head);
 
     const medals = ['🥇', '🥈', '🥉'];
@@ -184,7 +190,9 @@ function quiz(def) {
       const [day, time] = formatWhen(r.at);
       const when = el('td', 'when', day);
       when.append(el('small', null, time));
-      tr.append(el('td', null, medals[i] || i + 1), el('td', 'pts', r.score), when);
+      tr.append(el('td', null, medals[i] || i + 1), el('td', 'pts', r.score));
+      if (def.timed) tr.append(el('td', 'time', r.ms == null ? '—' : formatTime(r.ms)));
+      tr.append(when);
       table.append(tr);
     });
     container.append(table);
@@ -198,6 +206,7 @@ function quiz(def) {
     $('stats').hidden = $('resetWrap').hidden = !stats.games;
     if (stats.games) {
       $('statBest').textContent = records[0]?.score ?? 0;
+      if (records[0]?.ms != null) $('statBest').append(el('small', null, formatTime(records[0].ms)));
       $('statGames').textContent = stats.games;
       $('statAvg').textContent = Math.round(stats.total / stats.games);
     }
@@ -224,6 +233,30 @@ function quiz(def) {
     $('nextBtn').classList.remove('auto');
   }
 
+  // ---------- Stopwatch ----------
+  // game.ms is the time of the answered questions; game.since is when the current one appeared, null while it waits for Next.
+  const elapsed = () => game.ms + (game.since == null ? 0 : performance.now() - game.since);
+
+  function runClock() {
+    if (!def.timed) return;
+    game.since = performance.now();
+    $('clock').classList.add('running');
+    const tick = () => {
+      if (!game || game.since == null) return;
+      $('clockTime').textContent = formatTime(elapsed());
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  function pauseClock() {
+    if (!def.timed || game.since == null) return;
+    game.ms = elapsed();
+    game.since = null;
+    $('clock').classList.remove('running');
+    $('clockTime').textContent = formatTime(game.ms);
+  }
+
   let dealing = false;
 
   async function startGame() {
@@ -240,7 +273,7 @@ function quiz(def) {
     } finally {
       dealing = false;
     }
-    game = { items, index: 0, score: 0, mistakes: [], answers: [], answered: false, timer: null };
+    game = { items, index: 0, score: 0, mistakes: [], answers: [], answered: false, timer: null, ms: 0, since: null };
     show('game');
     renderQuestion();
   }
@@ -270,6 +303,7 @@ function quiz(def) {
     }) : def.play(item, settle));
     $('feedback').replaceChildren();
     $('nextBtn').classList.remove('visible', 'auto');
+    runClock();
   }
 
   function answer(i) {
@@ -286,6 +320,7 @@ function quiz(def) {
   function settle(ok, picked, points = ok ? POINTS : 0) {
     if (!game || game.answered) return;
     game.answered = true;
+    pauseClock();
 
     const item = game.items[game.index];
     game.score += points;
@@ -309,9 +344,10 @@ function quiz(def) {
     $('nextLabel').textContent = game.index === QUESTIONS - 1 ? 'Результаты →' : 'Дальше →';
     next.classList.add('visible');
     if (ok) {
-      next.style.setProperty('--auto', `${AUTO_NEXT_MS}ms`);
+      const wait = def.autoNext ?? AUTO_NEXT_MS;
+      next.style.setProperty('--auto', `${wait}ms`);
       next.classList.add('auto');
-      game.timer = setTimeout(nextQuestion, AUTO_NEXT_MS);
+      game.timer = setTimeout(nextQuestion, wait);
     } else {
       next.focus({ preventScroll: true });
     }
@@ -337,28 +373,35 @@ function quiz(def) {
 
   // ---------- Result ----------
   function finish() {
-    const { score, mistakes, answers } = game;
+    const { score, mistakes, answers, ms } = game;
     game = null;
 
     const summary = def.summary?.(answers, score);
     $('summaryCard').hidden = !summary;
     $('summaryCard').replaceChildren(...summary ?? []);
 
-    const prevBest = loadRecords()[0]?.score;
+    const prev = loadRecords()[0];
+    const prevBest = prev?.score;
     const at = Date.now();
-    const rank = saveResult(score, at).findIndex(r => r.at === at);
+    const record = def.timed ? { score, at, ms: Math.round(ms) } : { score, at };
+    const rank = saveResult(record).findIndex(r => r.at === at);
 
     const { emoji, msg } = resultFor(score);
     $('resEmoji').textContent = emoji;
     $('resMsg').textContent = `${PLAYER}, ${msg}`;
     countUp($('resScore'), score);
+    if (def.timed) $('resTime').textContent = `⏱ ${formatTime(record.ms)}`;
 
+    // In a timed game a tie in score is decided by time, so it is either a new record or a slower try.
+    const timedTie = def.timed && score === prevBest && prev.ms != null;
     const note = $('resNote');
-    const best = prevBest == null || score >= prevBest;
+    const best = prevBest == null || score > prevBest || (score === prevBest && rank === 0);
     note.className = `result-note${best ? ' best' : ''}`;
     note.textContent =
       prevBest == null ? '🎉 Первый рекорд поставлен!'
       : score > prevBest ? `🎉 Новый личный рекорд! Было ${prevBest}.`
+      : timedTie && rank === 0 ? `🎉 Новый рекорд скорости! Быстрее на ${formatTime(prev.ms - record.ms)}.`
+      : timedTie ? `${rank >= 0 ? `📌 ${rank + 1}-е место в твоих рекордах. ` : ''}До рекорда ${formatTime(record.ms - prev.ms)}.`
       : score === prevBest ? '⭐ Рекорд повторён!'
       : rank >= 0 ? `📌 ${rank + 1}-е место в твоих рекордах. До рекорда ${prevBest - score} баллов.`
       : `До рекорда не хватило ${prevBest - score} баллов.`;

@@ -64,6 +64,7 @@
   .best { grid-column: 3; display: flex; flex-direction: column; align-items: center; }
   .best:empty { display: none; }
   .best b { margin-top: 2px; font-size: .95rem; font-weight: 900; color: var(--text); }
+  .best small { color: var(--cyan); font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .medal { width: 100%; height: auto; display: block; overflow: visible; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .45)); }
   .medal-laurel { filter: drop-shadow(0 0 8px rgba(255, 210, 63, .55)); }
   .medal-diamond { filter: drop-shadow(0 0 10px rgba(34, 227, 255, .8)); animation: glow 2.4s ease-in-out infinite; }
@@ -147,6 +148,13 @@
       </div>
       <div class="best"></div>
     </a>
+    <a class="card" href="mult/index.html" data-game="mult">
+      <div>
+        <strong><span class="a">Таблица</span> <span class="b">умножения</span></strong>
+        <span>Реши на скорость</span>
+      </div>
+      <div class="best"></div>
+    </a>
   </div>
 </div>
 
@@ -173,17 +181,17 @@ function render() {
   document.querySelectorAll('[data-game]').forEach(renderBest);
 }
 
-// The medal for the best score in the game's records; nothing until the game has been played.
+// The medal for the best of the game's records, with its time in a timed game; nothing until the game has been played.
 function renderBest(card) {
-  let records = [];
-  try { records = JSON.parse(store.get(recordsKey(card.dataset.game))) || []; } catch {}
-  const scores = records.map(r => r?.score).filter(s => typeof s === 'number');
+  let best;
+  try { best = JSON.parse(store.get(recordsKey(card.dataset.game)))?.[0]; } catch {}
   const slot = card.querySelector('.best');
-  if (!scores.length) return slot.replaceChildren();
-  const best = Math.max(...scores);
-  slot.innerHTML = medalSvg(best);
-  slot.append(Object.assign(document.createElement('b'), { textContent: best }));
-  slot.title = `Лучший результат: ${best}`;
+  if (typeof best?.score !== 'number') return slot.replaceChildren();
+  slot.innerHTML = medalSvg(best.score);
+  slot.append(Object.assign(document.createElement('b'), { textContent: best.score }));
+  const time = best.ms == null ? '' : formatTime(best.ms);
+  if (time) slot.append(Object.assign(document.createElement('small'), { textContent: time }));
+  slot.title = `Лучший результат: ${best.score}${time && ` за ${time}`}`;
 }
 
 $('nameForm').onsubmit = e => {

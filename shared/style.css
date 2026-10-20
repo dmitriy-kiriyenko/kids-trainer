@@ -115,6 +115,7 @@ h2 { margin: 0 0 16px; font-size: 1.35rem; font-weight: 800; }
 }
 .stat-value { font-size: clamp(1.6rem, 7vw, 2.2rem); font-weight: 900; color: var(--yellow); text-shadow: 0 0 14px rgba(255, 210, 63, .45); }
 .stat-label { color: var(--muted); font-size: .9rem; }
+.stat-value small { display: block; font-size: .5em; color: var(--cyan); text-shadow: 0 0 10px rgba(34, 227, 255, .5); font-variant-numeric: tabular-nums; }
 
 .rule { display: grid; gap: 12px; }
 .rule-item {
@@ -146,6 +147,7 @@ h2 { margin: 0 0 16px; font-size: 1.35rem; font-weight: 800; }
 .board td:first-child { border-radius: 14px 0 0 14px; width: 3.2em; text-align: center; font-weight: 800; }
 .board td:last-child { border-radius: 0 14px 14px 0; }
 .board .pts { font-weight: 900; color: var(--yellow); white-space: nowrap; width: 5.5em; }
+.board .time { font-weight: 800; color: var(--cyan); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .board .when { font-weight: 600; }
 .board .when small { color: var(--muted); font-weight: 400; margin-left: 6px; }
 .board tr.me td { --hl: rgba(255, 210, 63, .6); background: rgba(255, 210, 63, .16); box-shadow: inset 0 1px var(--hl), inset 0 -1px var(--hl); }
@@ -186,6 +188,29 @@ h2 { margin: 0 0 16px; font-size: 1.35rem; font-weight: 800; }
   box-shadow: 0 0 16px rgba(155, 92, 255, .8);
   transition: width .4s ease;
 }
+
+/* Stopwatch of a timed game: glows and ticks while a question waits for its answer, dims in between. */
+.clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: fit-content;
+  margin: -6px auto 16px;
+  padding: 8px 22px;
+  border-radius: 99px;
+  border: 2px solid rgba(34, 227, 255, .35);
+  background: rgba(34, 227, 255, .08);
+  font-size: clamp(1.6rem, 7vw, 2.1rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  transition: color .2s, border-color .2s, box-shadow .2s;
+}
+.clock.running { color: var(--cyan); border-color: var(--cyan); text-shadow: 0 0 14px rgba(34, 227, 255, .7); box-shadow: 0 0 24px rgba(34, 227, 255, .3); }
+.clock-icon { font-size: .8em; }
+.clock.running .clock-icon { animation: tick 1s steps(2) infinite; }
+@keyframes tick { 50% { transform: rotate(14deg); } }
 
 .question { text-align: center; padding: 36px 20px; min-height: 190px; display: flex; flex-direction: column; justify-content: center; }
 .question.shake { animation: shake .45s; }
@@ -262,6 +287,7 @@ h2 { margin: 0 0 16px; font-size: 1.35rem; font-weight: 800; }
   filter: drop-shadow(0 0 22px rgba(255, 62, 165, .45));
 }
 .result-score small { font-size: .45em; }
+.result-time { font-size: clamp(1.6rem, 7vw, 2.2rem); font-weight: 900; color: var(--cyan); text-shadow: 0 0 14px rgba(34, 227, 255, .6); font-variant-numeric: tabular-nums; margin-bottom: 10px; }
 .result-msg { font-size: 1.3rem; font-weight: 600; margin: 0; }
 
 .result-note { margin: 14px 0 0; font-size: 1.1rem; color: var(--muted); }

@@ -10,7 +10,15 @@ const RESULTS = [
 ];
 
 const resultFor = score => RESULTS.find(r => score >= r.min);
+// Records are stored best first, so the best result of a game is records[0].
 const recordsKey = gameId => `${gameId}-records-v2`;
+
+// Stopwatch time as m:ss,d, tenths cut rather than rounded so the display never runs ahead.
+function formatTime(ms) {
+  const tenths = Math.floor(Math.max(0, ms) / 100);
+  const s = Math.floor(tenths / 10);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')},${tenths % 10}`;
+}
 
 // ---------- Medals ----------
 // SVG in a 100×120 box: ribbon on top, disc centred at (50, 76).

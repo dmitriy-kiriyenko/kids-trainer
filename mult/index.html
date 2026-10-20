@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Таблица умножения</title>
+<meta name="theme-color" content="#0b0820">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .logo { font-size: clamp(2.4rem, 12vw, 4.2rem); }
+  .rule-item .icon { font-size: 1.8rem; }
+
+  .question { min-height: 0; padding: 22px 20px 26px; }
+  .example { font-size: clamp(2.6rem, 13vw, 4rem); font-weight: 900; margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .slot {
+    display: inline-block;
+    min-width: 1.6em;
+    padding: 0 .1em;
+    color: var(--yellow);
+    border-bottom: 5px dashed var(--yellow);
+    line-height: 1.1;
+  }
+  .slot.ok { color: var(--lime); border-bottom: 5px solid var(--lime); text-shadow: 0 0 14px var(--lime); animation: pop .4s; }
+  .slot.bad { color: var(--lime); border-bottom: 5px solid var(--red); animation: pop .4s; }
+  .slot s { color: var(--red); font-size: .6em; margin-right: .2em; }
+
+  /* A phone keypad: 1–9, then backspace and 0. */
+  .answers { grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 360px; margin: 0 auto; }
+  .ans.key {
+    padding: 12px 0;
+    font-size: clamp(1.7rem, 8vw, 2.2rem);
+    letter-spacing: 0;
+    color: var(--text);
+    border-color: var(--border);
+    border-radius: 20px;
+  }
+  .ans.key:hover:not(:disabled) { border-color: var(--cyan); background: rgba(34, 227, 255, .08); }
+  .ans.key.press { border-color: var(--cyan); background: rgba(34, 227, 255, .25); transform: scale(.96); }
+  .ans.key.back { grid-column: 1; color: var(--muted); }
+  .ans.key.zero { grid-column: 2; }
+  .mistakes b { color: var(--lime); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="home" class="screen active">
+    <div class="hero">
+      <a class="back" href="../index.html">← Все игры</a>
+      <p class="greeting">Привет, <span data-player></span>! 👋</p>
+      <h1 class="logo"><span class="a">Таблица</span> <span class="b">умножения</span></h1>
+      <p class="tagline">Реши на скорость</p>
+      <button class="btn big" id="startBtn">▶ Начать игру</button>
+    </div>
+
+    <div class="card">
+      <h2>🎯 Как играть</h2>
+      <div class="rule">
+        <div class="rule-item"><span class="icon">✖️</span><span><b>10 примеров</b> из таблицы умножения, за каждый верный ответ — 10 баллов.</span></div>
+        <div class="rule-item"><span class="icon">⌨️</span><span>Набирай ответ цифрами на клавиатуре или на экране. Ответ проверяется сам, как только набраны все цифры.</span></div>
+        <div class="rule-item"><span class="icon">⏱</span><span>Секундомер идёт, пока ты думаешь над примером. При равных баллах выше рекорд, поставленный <b>быстрее</b>.</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/results.js"></script>
+<script src="../shared/quiz.js"></script>
+<script>
+const FACTORS = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+// Times 2 and times 10 are the easy ones, so they come up less often, though they still can.
+const weight = n => n === 2 || n === 10 ? 0.35 : 1;
+
+const PAIRS = FACTORS.flatMap(a => FACTORS.filter(b => b >= a).map(b => ({ a, b, weight: weight(a) * weight(b) })));
+
+// QUESTIONS different pairs drawn by weight, each in a random order of the factors: 3 × 7 or 7 × 3.
+function deal() {
+  const pool = PAIRS.slice();
+  return Array.from({ length: QUESTIONS }, () => {
+    let r = Math.random() * pool.reduce((sum, p) => sum + p.weight, 0);
+    const i = pool.findIndex(p => (r -= p.weight) < 0);
+    const { a, b } = pool.splice(i < 0 ? pool.length - 1 : i, 1)[0];
+    return Math.random() < 0.5 ? { a, b, answer: a * b } : { a: b, b: a, answer: a * b };
+  });
+}
+
+const example = item => `${item.a} × ${item.b} = `;
+
+// ---------- Typing the answer ----------
+// The answer of the question on screen as it is typed; null once it is checked.
+let typing = null;
+let slot, keypad;
+
+function play(item, settle) {
+  typing = { item, typed: '', settle };
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0'];
+  keypad = keys.map(key => {
+    const btn = el('button', `ans key${key === '⌫' ? ' back' : key === '0' ? ' zero' : ''}`, key);
+    btn.dataset.key = key;
+    btn.setAttribute('aria-label', key === '⌫' ? 'Стереть' : key);
+    // Keep the focus off the keys, or Enter on the keyboard would press the last tapped one again.
+    btn.tabIndex = -1;
+    btn.onmousedown = e => e.preventDefault();
+    btn.onclick = () => press(key);
+    return btn;
+  });
+  return keypad;
+}
+
+function press(key) {
+  if (!typing) return;
+  const btn = keypad.find(b => b.dataset.key === key);
+  btn.classList.remove('press'); btn.offsetWidth; btn.classList.add('press');
+  setTimeout(() => btn.classList.remove('press'), 120);
+
+  typing.typed = key === '⌫' ? typing.typed.slice(0, -1) : typing.typed + key;
+  slot.textContent = typing.typed;
+  if (typing.typed.length < String(typing.item.answer).length) return;
+
+  const { item, typed, settle } = typing;
+  typing = null;
+  keypad.forEach(b => b.disabled = true);
+  settle(+typed === item.answer, typed);
+}
+
+document.addEventListener('keydown', e => {
+  if (!typing || $('dlg').open || !$('game').classList.contains('active')) return;
+  if (e.key >= '0' && e.key <= '9') press(e.key);
+  else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); press('⌫'); }
+});
+
+quiz({
+  id: 'mult',
+  label: 'Сколько будет?',
+  keys: 'Клавиши: <b>0</b>–<b>9</b>, <b>Backspace</b> — стереть',
+  timed: true,
+  autoNext: 800,
+  deal,
+  question(item) {
+    slot = el('span', 'slot');
+    const p = el('p', 'example', example(item));
+    p.append(slot);
+    return [p];
+  },
+  play,
+  reveal(item, ok) {
+    slot.classList.add(ok ? 'ok' : 'bad');
+    if (!ok) slot.replaceChildren(el('s', null, slot.textContent), item.answer);
+  },
+  hint: (item, picked) => [
+    el('span', 'check', `${example(item)}${item.answer}`),
+    ...+picked === item.answer ? [] : [el('span', 'why', `Ты набрал ${picked}.`)],
+  ],
+  mistake(item, picked) {
+    const sub = el('span', 'sub');
+    sub.append('Ты набрал ', el('s', null, picked));
+    return [example(item), el('b', null, item.answer), sub];
+  },
+});
+</script>
+</body>
+</html>

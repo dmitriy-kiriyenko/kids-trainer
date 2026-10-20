@@ -117,7 +117,7 @@
       <h2>📒 Как играть</h2>
       <div class="rule">
         <div class="rule-item"><span class="icon">📖</span><span>Каждая игра — новый короткий текст и <b>10 заданий</b> по нему. Текст всё время перед глазами.</span></div>
-        <div class="rule-item"><span class="icon">🔤</span><span><b>1–4.</b> Выбери перевод предложения. Смотри в оба: кто кого, есть ли «не», какое время.</span></div>
+        <div class="rule-item"><span class="icon">🔤</span><span><b>1–4.</b> Выбери перевод предложения. Смотри в оба: кто кого, есть ли «не», те ли слова.</span></div>
         <div class="rule-item"><span class="icon">❓</span><span><b>5–6.</b> Выбери, что значит вопрос.</span></div>
         <div class="rule-item"><span class="icon">🔎</span><span><b>7–10.</b> Настоящий reading test в три шага: пойми вопрос (3 балла), найди в тексте предложение с ответом (3), выбери ответ (4).</span></div>
         <div class="rule-item"><span class="icon">👀</span><span>Не знаешь слово? <b>Нажми на него</b> — увидишь перевод. Баллы за это не снимаются, а подсмотренные слова будут в конце, чтобы их запомнить.</span></div>
@@ -152,7 +152,8 @@ const TEXTS = [
 //   "reading": [{ "question": "…?", "meaning": ["верный смысл", "…", "…", "…"], "evidence": 4, "answers": ["верный", "…", "…"] }, × 4]
 // }
 // Sentence numbers start from 1. The first option is always the right one; they are shuffled when shown.
-// The wrong translations differ from the right one in one thing: who does what to whom, "not", the tense, a preposition.
+// The wrong translations differ from the right one in one thing: who does what to whom, "not", a preposition, a word.
+// Never in the tense alone: the same goes for the meaning options of questions.
 
 const TEXTS_KEY = 'reading-texts-v1';
 const STEP_POINTS = [3, 3, 4];

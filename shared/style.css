@@ -253,6 +253,21 @@ h2 { margin: 0 0 16px; font-size: 1.35rem; font-weight: 800; }
 .ans.right { background: var(--lime); border-color: var(--lime); color: #04260f; box-shadow: 0 0 34px rgba(93, 255, 143, .7); }
 .ans.wrong { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 0 34px rgba(255, 77, 109, .7); }
 
+/* The phone keypad of shared/keypad.js: 1–9, then ⌫ and 0. */
+.keypad { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 360px; margin: 0 auto; }
+.ans.key {
+  padding: 12px 0;
+  font-size: clamp(1.7rem, 8vw, 2.2rem);
+  letter-spacing: 0;
+  color: var(--text);
+  border-color: var(--border);
+  border-radius: 20px;
+}
+.ans.key:hover:not(:disabled) { border-color: var(--cyan); background: rgba(34, 227, 255, .08); }
+.ans.key.press { border-color: var(--cyan); background: rgba(34, 227, 255, .25); transform: scale(.96); }
+.ans.key.back { color: var(--muted); }
+.ans.key.zero { grid-column: 2; }
+
 .next-area { margin-top: 16px; min-height: 64px; }
 .next {
   position: relative;

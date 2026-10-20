@@ -27,20 +27,6 @@
   .slot.bad { color: var(--lime); border-bottom: 5px solid var(--red); animation: pop .4s; }
   .slot s { color: var(--red); font-size: .6em; margin-right: .2em; }
 
-  /* A phone keypad: 1–9, then backspace and 0. */
-  .answers { grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 360px; margin: 0 auto; }
-  .ans.key {
-    padding: 12px 0;
-    font-size: clamp(1.7rem, 8vw, 2.2rem);
-    letter-spacing: 0;
-    color: var(--text);
-    border-color: var(--border);
-    border-radius: 20px;
-  }
-  .ans.key:hover:not(:disabled) { border-color: var(--cyan); background: rgba(34, 227, 255, .08); }
-  .ans.key.press { border-color: var(--cyan); background: rgba(34, 227, 255, .25); transform: scale(.96); }
-  .ans.key.back { grid-column: 1; color: var(--muted); }
-  .ans.key.zero { grid-column: 2; }
   .mistakes b { color: var(--lime); }
 </style>
 </head>
@@ -68,6 +54,7 @@
 
 <script src="../shared/results.js"></script>
 <script src="../shared/quiz.js"></script>
+<script src="../shared/keypad.js"></script>
 <script>
 const FACTORS = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 // Times 2 and times 10 are the easy ones, so they come up less often, though they still can.
@@ -89,47 +76,21 @@ function deal() {
 const example = item => `${item.a} × ${item.b} = `;
 
 // ---------- Typing the answer ----------
-// The answer of the question on screen as it is typed; null once it is checked.
-let typing = null;
-let slot, keypad;
+// The slot after "=" of the question on screen.
+let slot;
 
+// Checks the answer as soon as it has as many digits as the right one.
 function play(item, settle) {
-  typing = { item, typed: '', settle };
-  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0'];
-  keypad = keys.map(key => {
-    const btn = el('button', `ans key${key === '⌫' ? ' back' : key === '0' ? ' zero' : ''}`, key);
-    btn.dataset.key = key;
-    btn.setAttribute('aria-label', key === '⌫' ? 'Стереть' : key);
-    // Keep the focus off the keys, or Enter on the keyboard would press the last tapped one again.
-    btn.tabIndex = -1;
-    btn.onmousedown = e => e.preventDefault();
-    btn.onclick = () => press(key);
-    return btn;
-  });
-  return keypad;
+  let typed = '';
+  const pad = keypad(key => {
+    typed = key === BACK ? typed.slice(0, -1) : typed + key;
+    slot.textContent = typed;
+    if (typed.length < String(item.answer).length) return;
+    pad.disable();
+    settle(+typed === item.answer, typed);
+  }, { back: true });
+  return [pad.node];
 }
-
-function press(key) {
-  if (!typing) return;
-  const btn = keypad.find(b => b.dataset.key === key);
-  btn.classList.remove('press'); btn.offsetWidth; btn.classList.add('press');
-  setTimeout(() => btn.classList.remove('press'), 120);
-
-  typing.typed = key === '⌫' ? typing.typed.slice(0, -1) : typing.typed + key;
-  slot.textContent = typing.typed;
-  if (typing.typed.length < String(typing.item.answer).length) return;
-
-  const { item, typed, settle } = typing;
-  typing = null;
-  keypad.forEach(b => b.disabled = true);
-  settle(+typed === item.answer, typed);
-}
-
-document.addEventListener('keydown', e => {
-  if (!typing || $('dlg').open || !$('game').classList.contains('active')) return;
-  if (e.key >= '0' && e.key <= '9') press(e.key);
-  else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); press('⌫'); }
-});
 
 quiz({
   id: 'mult',
